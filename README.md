@@ -60,7 +60,18 @@ tests/      # Tài nguyên kiểm thử dùng chung trong tương lai
 
 ## Trạng thái hiện tại
 
-Dự án đang ở giai đoạn **khởi tạo**. BF-001 chỉ tạo bộ khung và quy ước; chưa có Spring Boot, Next.js, PostgreSQL, Redis hay Docker Compose.
+Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL local qua Docker Compose; chưa có Spring Boot, Next.js, Redis hay schema nghiệp vụ.
+
+## PostgreSQL local quick start
+
+Sao chép `.env.example` thành `.env`, thay password local mạnh (không commit file này), rồi chạy:
+
+```powershell
+.\scripts\postgres.ps1 up
+.\scripts\postgres.ps1 ready
+```
+
+Xem hướng dẫn và xử lý lỗi tại [PostgreSQL local bằng Docker Compose](docs/setup/postgresql-docker.md).
 
 ## Kiểm tra môi trường
 

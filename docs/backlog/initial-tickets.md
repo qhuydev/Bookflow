@@ -10,11 +10,11 @@
 - Kiểm thử hoặc kiểm tra bắt buộc: tree, Git status/branch, syntax script, script môi trường, link Markdown, ignore pattern và quét secret.
 - Ticket phụ thuộc: không có.
 
-## BF-002 — PostgreSQL Docker Compose và environment template
+## BF-002 — PostgreSQL Docker Compose và environment template (Hoàn thành)
 - Mục tiêu: cung cấp PostgreSQL local có cấu hình mẫu an toàn.
 - Phạm vi: Docker Compose PostgreSQL, volume và `.env.example`.
 - Không nằm trong phạm vi: schema ứng dụng, Redis và backend.
-- Tiêu chí hoàn thành: dịch vụ khởi động được theo tài liệu và không commit secret.
+- Tiêu chí hoàn thành: dịch vụ khởi động được theo tài liệu và không commit secret. Đã xác minh Docker, health check, kết nối và persistence của named volume.
 - Kiểm thử hoặc kiểm tra bắt buộc: validate Compose, health check và kết nối local.
 - Ticket phụ thuộc: BF-001.
 
