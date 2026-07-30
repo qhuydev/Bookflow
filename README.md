@@ -60,7 +60,14 @@ tests/      # Tài nguyên kiểm thử dùng chung trong tương lai
 
 ## Trạng thái hiện tại
 
-Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL và Redis local qua Docker Compose; chưa có Spring Boot, Next.js, Redis integration hay schema nghiệp vụ.
+Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL, Redis local và nền backend Spring Boot; chưa có Next.js, database schema hay tích hợp database/Redis vào backend.
+
+```text
+BF-001: Completed
+BF-002: Completed
+BF-003: Completed
+BF-004: Completed
+```
 
 ## Infrastructure local quick start
 
@@ -81,6 +88,19 @@ docker compose ps
 ```
 
 Xem hướng dẫn tại [PostgreSQL local bằng Docker Compose](docs/setup/postgresql-docker.md) và [Redis local bằng Docker Compose](docs/setup/redis-docker.md).
+
+## Backend quick start
+
+```powershell
+.\apps\api\mvnw.cmd clean verify
+
+$env:SPRING_PROFILES_ACTIVE = "local"
+.\apps\api\mvnw.cmd spring-boot:run
+```
+
+Health URL: `http://127.0.0.1:8080/actuator/health`.
+
+Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md) và [README của backend](apps/api/README.md). BF-004 chưa có JPA, Flyway, PostgreSQL/Redis integration, authentication, booking API hoặc Next.js.
 
 ## Kiểm tra môi trường
 

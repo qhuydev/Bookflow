@@ -26,11 +26,11 @@
 - Kiểm thử hoặc kiểm tra bắt buộc: health check và `PING`.
 - Ticket phụ thuộc: BF-002.
 
-## BF-004 — Khởi tạo Spring Boot
+## BF-004 — Khởi tạo Spring Boot (Hoàn thành)
 - Mục tiêu: tạo ứng dụng backend Java 21 tối thiểu.
 - Phạm vi: Spring Boot, cấu trúc module ban đầu và cấu hình chạy local.
 - Không nằm trong phạm vi: nghiệp vụ booking hoàn chỉnh.
-- Tiêu chí hoàn thành: build và test cơ bản chạy được.
+- Tiêu chí hoàn thành: build và test cơ bản chạy được. Đã xác minh Maven Wrapper, Java 21, executable JAR, application context và Actuator health.
 - Kiểm thử hoặc kiểm tra bắt buộc: build, unit test và application context test.
 - Ticket phụ thuộc: BF-001, BF-002.
 
