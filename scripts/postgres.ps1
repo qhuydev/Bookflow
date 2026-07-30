@@ -32,7 +32,7 @@ function Show-Help {
 Su dung: .\scripts\postgres.ps1 <command>
 
   up      Khoi dong PostgreSQL o detached mode.
-  down    Dung va xoa container/network; giu named volume.
+  down    Dung va xoa rieng container postgres; giu named volume va Redis.
   status  Hien thi trang thai service postgres.
   ready   Kiem tra pg_isready trong container.
   logs    Hien thi log cua postgres (khong follow vo han).
@@ -46,8 +46,8 @@ if (-not (Test-Path $script:ComposeFile)) { Write-Error "Khong tim thay $script:
 Test-DockerPrerequisites
 
 switch ($Command) {
-    'up'     { & docker compose --project-directory $script:RepoRoot -f $script:ComposeFile up -d }
-    'down'   { & docker compose --project-directory $script:RepoRoot -f $script:ComposeFile down }
+    'up'     { & docker compose --project-directory $script:RepoRoot -f $script:ComposeFile up -d postgres }
+    'down'   { & docker compose --project-directory $script:RepoRoot -f $script:ComposeFile stop postgres; if ($LASTEXITCODE -eq 0) { & docker compose --project-directory $script:RepoRoot -f $script:ComposeFile rm -f postgres } }
     'status' { & docker compose --project-directory $script:RepoRoot -f $script:ComposeFile ps postgres }
     'ready'  { & docker compose --project-directory $script:RepoRoot -f $script:ComposeFile exec -T postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' }
     'logs'   { & docker compose --project-directory $script:RepoRoot -f $script:ComposeFile logs postgres }

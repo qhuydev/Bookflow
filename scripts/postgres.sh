@@ -15,7 +15,7 @@ show_help() {
 Su dung: bash scripts/postgres.sh <command>
 
   up      Khoi dong PostgreSQL o detached mode.
-  down    Dung va xoa container/network; giu named volume.
+  down    Dung va xoa rieng container postgres; giu named volume va Redis.
   status  Hien thi trang thai service postgres.
   ready   Kiem tra pg_isready trong container.
   logs    Hien thi log cua postgres (khong follow vo han).
@@ -52,8 +52,8 @@ if [[ ! -f "$compose_file" ]]; then
 fi
 
 case "$command_name" in
-  up) compose up -d ;;
-  down) compose down ;;
+  up) compose up -d postgres ;;
+  down) compose stop postgres && compose rm -f postgres ;;
   status) compose ps postgres ;;
   ready) compose exec -T postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' ;;
   logs) compose logs postgres ;;

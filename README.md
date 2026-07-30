@@ -60,18 +60,27 @@ tests/      # Tài nguyên kiểm thử dùng chung trong tương lai
 
 ## Trạng thái hiện tại
 
-Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL local qua Docker Compose; chưa có Spring Boot, Next.js, Redis hay schema nghiệp vụ.
+Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL và Redis local qua Docker Compose; chưa có Spring Boot, Next.js, Redis integration hay schema nghiệp vụ.
 
-## PostgreSQL local quick start
+## Infrastructure local quick start
 
 Sao chép `.env.example` thành `.env`, thay password local mạnh (không commit file này), rồi chạy:
 
 ```powershell
 .\scripts\postgres.ps1 up
+.\scripts\redis.ps1 up
 .\scripts\postgres.ps1 ready
+.\scripts\redis.ps1 ready
 ```
 
-Xem hướng dẫn và xử lý lỗi tại [PostgreSQL local bằng Docker Compose](docs/setup/postgresql-docker.md).
+Hoặc khởi động toàn bộ stack:
+
+```powershell
+docker compose up -d
+docker compose ps
+```
+
+Xem hướng dẫn tại [PostgreSQL local bằng Docker Compose](docs/setup/postgresql-docker.md) và [Redis local bằng Docker Compose](docs/setup/redis-docker.md).
 
 ## Kiểm tra môi trường
 

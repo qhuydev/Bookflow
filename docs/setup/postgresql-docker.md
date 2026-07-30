@@ -56,6 +56,10 @@ bash scripts/postgres.sh down
 
 `down` chi dung va xoa container/network; named volume duoc giu lai. `docker compose down -v` xoa volume va du lieu, vi vay chi duoc nhac den nhu canh bao va khong dung cho van hanh thuong ngay.
 
+## Nhieu service trong Compose
+
+`docker compose up -d` khoi dong toan bo stack; `docker compose up -d postgres` chi khoi dong PostgreSQL va `docker compose up -d redis` chi khoi dong Redis. `docker compose down` dung toan bo stack, vi vay hay dung `scripts/postgres.ps1 down` neu chi muon dung PostgreSQL, hoac `scripts/redis.ps1 down` neu chi muon dung Redis. Khong dung `docker compose down -v`.
+
 ## Ket noi bang DBeaver hoac pgAdmin
 
 ```text

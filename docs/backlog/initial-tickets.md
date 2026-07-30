@@ -18,11 +18,11 @@
 - Kiểm thử hoặc kiểm tra bắt buộc: validate Compose, health check và kết nối local.
 - Ticket phụ thuộc: BF-001.
 
-## BF-003 — Redis local
+## BF-003 — Redis local (Hoàn thành)
 - Mục tiêu: bổ sung Redis local cho cache và giữ chỗ tạm thời.
 - Phạm vi: service Redis, cấu hình mẫu và tài liệu.
 - Không nằm trong phạm vi: Redis cluster hoặc dùng Redis làm khóa cuối cùng chống đặt trùng.
-- Tiêu chí hoàn thành: Redis chạy và kiểm tra kết nối được.
+- Tiêu chí hoàn thành: Redis chạy và kiểm tra kết nối được. Đã xác minh Docker, authentication, AOF persistence và service isolation.
 - Kiểm thử hoặc kiểm tra bắt buộc: health check và `PING`.
 - Ticket phụ thuộc: BF-002.
 
