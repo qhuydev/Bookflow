@@ -39,7 +39,7 @@ Xây dựng một sản phẩm mẫu có kỷ luật kỹ thuật để thực h
 ## Công nghệ dự kiến
 
 - Backend: Java 21, Spring Boot, Spring Security, Spring Data JPA.
-- Frontend: Next.js, TypeScript, Tailwind CSS.
+- Frontend: Next.js, TypeScript; BF-005 dùng CSS và CSS Modules, chưa dùng UI framework.
 - Dữ liệu: PostgreSQL; Redis cho cache và giữ chỗ tạm thời.
 - Hạ tầng: Docker Compose, GitHub Actions, Nginx.
 
@@ -60,13 +60,14 @@ tests/      # Tài nguyên kiểm thử dùng chung trong tương lai
 
 ## Trạng thái hiện tại
 
-Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL, Redis local và nền backend Spring Boot; chưa có Next.js, database schema hay tích hợp database/Redis vào backend.
+Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL, Redis local, nền backend Spring Boot và nền frontend Next.js; chưa có database schema, API integration hay tích hợp database/Redis vào backend.
 
 ```text
 BF-001: Completed
 BF-002: Completed
 BF-003: Completed
 BF-004: Completed
+BF-005: In progress — production audit đã sạch sau overrides, nhưng cây dependency còn lỗi `npm ls` cần xử lý
 ```
 
 ## Infrastructure local quick start
@@ -100,7 +101,24 @@ $env:SPRING_PROFILES_ACTIVE = "local"
 
 Health URL: `http://127.0.0.1:8080/actuator/health`.
 
-Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md) và [README của backend](apps/api/README.md). BF-004 chưa có JPA, Flyway, PostgreSQL/Redis integration, authentication, booking API hoặc Next.js.
+Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md) và [README của backend](apps/api/README.md). Backend BF-004 chưa có JPA, Flyway, PostgreSQL/Redis integration, authentication hoặc booking API.
+
+## Frontend quick start
+
+```powershell
+npm --prefix .\apps\web ci
+npm --prefix .\apps\web run dev
+```
+
+Frontend URL: `http://127.0.0.1:3000`.
+
+Chạy toàn bộ kiểm tra frontend:
+
+```powershell
+npm --prefix .\apps\web run verify
+```
+
+Xem [hướng dẫn Next.js local](docs/setup/nextjs-local.md) và [README của frontend](apps/web/README.md). BF-005 chưa có authentication, booking interface, dashboard, API integration hoặc CORS integration.
 
 ## Kiểm tra môi trường
 

@@ -34,13 +34,15 @@
 - Kiểm thử hoặc kiểm tra bắt buộc: build, unit test và application context test.
 - Ticket phụ thuộc: BF-001, BF-002.
 
-## BF-005 — Khởi tạo Next.js
-- Mục tiêu: tạo ứng dụng frontend TypeScript/Tailwind tối thiểu.
-- Phạm vi: Next.js, lint, cấu trúc thư mục và trang khởi đầu.
-- Không nằm trong phạm vi: màn hình nghiệp vụ hoàn chỉnh.
-- Tiêu chí hoàn thành: build và lint chạy được.
-- Kiểm thử hoặc kiểm tra bắt buộc: type check, lint và production build.
+## BF-005 — Khởi tạo Next.js (Đang thực hiện)
+- Mục tiêu: tạo ứng dụng frontend Next.js và TypeScript strict tối thiểu.
+- Phạm vi: App Router, CSS Modules, lint, unit test, cấu trúc thư mục và trang khởi đầu.
+- Không nằm trong phạm vi: màn hình nghiệp vụ hoàn chỉnh, authentication, booking và API integration.
+- Tiêu chí hoàn thành: lint, type check, unit test, production build và production smoke test chạy được; production dependency không còn lỗ hổng nghiêm trọng chưa xử lý.
+- Kiểm thử hoặc kiểm tra bắt buộc: ESLint, type check, Vitest, production build và HTTP smoke test.
 - Ticket phụ thuộc: BF-001.
+
+> Kiểm tra chức năng và production audit BF-005 đã đạt sau khi thêm overrides tạm thời. Tuy nhiên, `npm ls postcss sharp` còn báo PostCSS của Vite là dependency không hợp lệ so với override toàn cục, nên ticket chưa được đánh dấu hoàn thành.
 
 ## BF-006 — Thiết lập Flyway
 - Mục tiêu: kiểm soát thay đổi database bằng migration.
