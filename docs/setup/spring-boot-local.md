@@ -2,7 +2,7 @@
 
 ## BF-004 làm gì?
 
-BF-004 tạo nền backend tối thiểu bằng Java 21 và Spring Boot 4.1.0. Spring Boot quản lý application context và embedded web server; Maven Wrapper giúp các máy dùng cùng Maven version; Actuator health cho biết ứng dụng đã sẵn sàng. Chưa có nghiệp vụ BookFlow trong ticket này.
+BF-004 tạo nền backend tối thiểu bằng Java 21 và Spring Boot 4.1.0. BF-006 bổ sung JDBC, PostgreSQL và Flyway nhưng chưa có schema nghiệp vụ BookFlow.
 
 ## Cấu trúc project
 
@@ -47,9 +47,14 @@ Bash:
 ## Chạy local
 
 ```powershell
+$env:BOOKFLOW_DB_URL = "jdbc:postgresql://127.0.0.1:5433/bookflow"
+$env:BOOKFLOW_DB_USERNAME = "bookflow"
+$env:BOOKFLOW_DB_PASSWORD = "<lấy từ .env local>"
 $env:SPRING_PROFILES_ACTIVE = "local"
 .\apps\api\mvnw.cmd spring-boot:run
 ```
+
+Port PostgreSQL có thể là `5432`, `5433` hoặc giá trị khác trong `.env`; xác nhận bằng `docker compose port postgres 5432`. Password không được hardcode hoặc commit.
 
 Dừng bằng `Ctrl+C`, rồi có thể xóa biến khỏi shell:
 
@@ -83,7 +88,9 @@ Không kill tiến trình khác đang chiếm port.
 
 ## Quan hệ với PostgreSQL và Redis
 
-PostgreSQL và Redis tiếp tục chạy qua Docker Compose, nhưng BF-004 chưa kết nối backend đến hai service này. Build và context test không cần Docker. Flyway dự kiến ở BF-006, Testcontainers ở BF-007 và Redis integration ở ticket sau. Khi database integration được triển khai, PostgreSQL vẫn là nguồn dữ liệu nghiệp vụ chính.
+PostgreSQL và Redis tiếp tục chạy qua Docker Compose. BF-006 kết nối profile local tới PostgreSQL và chạy migration từ `classpath:db/migration`; Redis vẫn chưa được tích hợp. Unit/application-context build không cần Docker nhờ profile test riêng. Flyway integration test hiện dùng PostgreSQL local; BF-007 sẽ thay bằng Testcontainers.
+
+Hướng dẫn migration và lệnh `flyway-it` nằm tại [Quản lý migration với Flyway](flyway.md).
 
 ## Troubleshooting
 

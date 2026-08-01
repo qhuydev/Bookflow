@@ -44,13 +44,15 @@
 
 > Kiểm tra chức năng và production audit BF-005 đã đạt sau khi thêm overrides tạm thời. Tuy nhiên, `npm ls postcss sharp` còn báo PostCSS của Vite là dependency không hợp lệ so với override toàn cục, nên ticket chưa được đánh dấu hoàn thành.
 
-## BF-006 — Thiết lập Flyway
+## BF-006 — Thiết lập Flyway (Hoàn thành)
 - Mục tiêu: kiểm soát thay đổi database bằng migration.
 - Phạm vi: tích hợp Flyway, vị trí migration và migration baseline.
 - Không nằm trong phạm vi: toàn bộ schema nghiệp vụ.
-- Tiêu chí hoàn thành: migration chạy tiến lên an toàn trên database trống.
-- Kiểm thử hoặc kiểm tra bắt buộc: integration test migration.
+- Tiêu chí hoàn thành: migration chạy tiến lên an toàn trên database trống, validate thành công và lần chạy lại không tạo migration trùng.
+- Kiểm thử hoặc kiểm tra bắt buộc: unit/context build, integration test migration trên PostgreSQL thật, executable JAR và runtime health.
 - Ticket phụ thuộc: BF-002, BF-004.
+
+> Đã xác minh V1 trên PostgreSQL 17 thật, Flyway validate thành công, lần migrate thứ hai không tạo migration mới, integration schema được cleanup và runtime health trả `UP`.
 
 ## BF-007 — Testcontainers
 - Mục tiêu: tạo nền kiểm thử tích hợp với PostgreSQL thực.

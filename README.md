@@ -60,7 +60,7 @@ tests/      # Tài nguyên kiểm thử dùng chung trong tương lai
 
 ## Trạng thái hiện tại
 
-Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL, Redis local, nền backend Spring Boot và nền frontend Next.js; chưa có database schema, API integration hay tích hợp database/Redis vào backend.
+Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL, Redis local, nền backend Spring Boot, nền frontend Next.js và Flyway baseline; chưa có schema nghiệp vụ, API integration hay Redis integration vào backend.
 
 ```text
 BF-001: Completed
@@ -68,6 +68,7 @@ BF-002: Completed
 BF-003: Completed
 BF-004: Completed
 BF-005: In progress — production audit đã sạch sau overrides, nhưng cây dependency còn lỗi `npm ls` cần xử lý
+BF-006: Completed
 ```
 
 ## Infrastructure local quick start
@@ -101,7 +102,7 @@ $env:SPRING_PROFILES_ACTIVE = "local"
 
 Health URL: `http://127.0.0.1:8080/actuator/health`.
 
-Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md) và [README của backend](apps/api/README.md). Backend BF-004 chưa có JPA, Flyway, PostgreSQL/Redis integration, authentication hoặc booking API.
+Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, Redis integration, authentication hoặc booking API.
 
 ## Frontend quick start
 
