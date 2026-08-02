@@ -64,13 +64,15 @@
 
 > Đã xác minh `clean test` không tạo container; hai lần `clean verify` tạo hai PostgreSQL Testcontainer độc lập, chạy `FlywayMigrationIT` không skipped và cleanup hoàn toàn. PostgreSQL/Redis Compose không bị ảnh hưởng.
 
-## BF-008 — Global exception handling
+## BF-008 — Global exception handling (Hoàn thành)
 - Mục tiêu: chuẩn hóa lỗi API.
 - Phạm vi: error response, handler validation và mapping lỗi phổ biến.
 - Không nằm trong phạm vi: mọi lỗi nghiệp vụ tương lai.
 - Tiêu chí hoàn thành: API trả lỗi nhất quán, không lộ thông tin nhạy cảm.
-- Kiểm thử hoặc kiểm tra bắt buộc: controller/integration tests cho lỗi validation và not found.
+- Kiểm thử hoặc kiểm tra bắt buộc: MockMvc test cho validation, malformed request, not found, lỗi HTTP phổ biến và fallback 500; full Maven verification và runtime smoke test.
 - Ticket phụ thuộc: BF-004.
+
+> Đã xác minh MockMvc tests, full Maven verification và runtime profile `local`. Actuator health trả `200/UP`; endpoint không tồn tại trả `404 application/problem+json` với code `ENDPOINT_NOT_FOUND`, không lộ chi tiết nội bộ. PostgreSQL/Redis Compose không bị ảnh hưởng.
 
 ## BF-009 — OpenAPI
 - Mục tiêu: cung cấp mô tả API có thể truy cập.

@@ -2,6 +2,13 @@ spring:
   application:
     name: bookflow-api
 
+server:
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
 management:
   endpoints:
     web:
