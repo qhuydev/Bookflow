@@ -74,13 +74,15 @@
 
 > Đã xác minh MockMvc tests, full Maven verification và runtime profile `local`. Actuator health trả `200/UP`; endpoint không tồn tại trả `404 application/problem+json` với code `ENDPOINT_NOT_FOUND`, không lộ chi tiết nội bộ. PostgreSQL/Redis Compose không bị ảnh hưởng.
 
-## BF-009 — OpenAPI
+## BF-009 — OpenAPI (Hoàn thành)
 - Mục tiêu: cung cấp mô tả API có thể truy cập.
 - Phạm vi: OpenAPI base, metadata và cách bảo vệ tài liệu nếu cần.
 - Không nằm trong phạm vi: đặc tả đầy đủ cho toàn bộ endpoint tương lai.
 - Tiêu chí hoàn thành: endpoint tài liệu hợp lệ.
 - Kiểm thử hoặc kiểm tra bắt buộc: kiểm tra sinh OpenAPI và endpoint docs.
 - Ticket phụ thuộc: BF-004, BF-008.
+
+> Đã xác minh OpenAPI JSON và Swagger UI bằng HTTP test, full Maven verification và runtime profile `local`. Metadata đúng contract, tài liệu không chứa cấu hình nội bộ, regression BF-008 vẫn đạt và PostgreSQL/Redis Compose không bị ảnh hưởng.
 
 ## BF-010 — Thiết kế authentication
 - Mục tiêu: chốt thiết kế xác thực và refresh token.

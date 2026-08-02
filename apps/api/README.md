@@ -1,6 +1,6 @@
 # BookFlow API
 
-Backend dùng Java 21, Spring Boot 4.1.0 và Maven Wrapper. Profile local kết nối PostgreSQL Compose; integration test dùng PostgreSQL Testcontainer tạm và Spring Boot `@ServiceConnection`. Lỗi HTTP được chuẩn hóa bằng Spring `ProblemDetail`. Chưa có schema nghiệp vụ hoặc Redis integration.
+Backend dùng Java 21, Spring Boot 4.1.0 và Maven Wrapper. Profile local kết nối PostgreSQL Compose; integration test dùng PostgreSQL Testcontainer tạm và Spring Boot `@ServiceConnection`. Lỗi HTTP được chuẩn hóa bằng Spring `ProblemDetail`. OpenAPI mô tả contract HTTP ở định dạng máy đọc được, còn Swagger UI hỗ trợ đọc và khám phá contract trên trình duyệt. Chưa có schema nghiệp vụ hoặc Redis integration.
 
 BF-008 đã được xác minh bằng MockMvc, full Maven verification và runtime smoke test với profile `local`: Actuator health trả `UP`, endpoint không tồn tại trả `ENDPOINT_NOT_FOUND` theo error contract.
 
@@ -16,6 +16,15 @@ $env:SPRING_PROFILES_ACTIVE = "local"
 ```
 
 Health URL: `http://127.0.0.1:8080/actuator/health`.
+
+## OpenAPI và Swagger UI
+
+Sau khi khởi động backend local bằng lệnh trên, truy cập:
+
+- OpenAPI JSON: `http://127.0.0.1:8080/v3/api-docs`.
+- Swagger UI: `http://127.0.0.1:8080/swagger-ui/index.html`.
+
+Metadata hiện dùng title `BookFlow API` và version `v1`. BF-009 chưa tạo API nghiệp vụ, vì vậy `paths` có thể đang rỗng; các endpoint Actuator không được đưa vào tài liệu OpenAPI.
 
 `clean test` chạy unit/application-context test và MockMvc test cho error contract, không cần Docker. `clean verify` chạy thêm `FlywayMigrationIT`; Docker daemon phải hoạt động nhưng không cần biến `BOOKFLOW_TEST_DB_*` hoặc PostgreSQL local.
 
