@@ -60,7 +60,7 @@ tests/      # Tài nguyên kiểm thử dùng chung trong tương lai
 
 ## Trạng thái hiện tại
 
-Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL, Redis local, nền backend Spring Boot, nền frontend Next.js và Flyway baseline; chưa có schema nghiệp vụ, API integration hay Redis integration vào backend.
+Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL, Redis local, nền backend Spring Boot, nền frontend Next.js, Flyway baseline và PostgreSQL integration test bằng Testcontainers; chưa có schema nghiệp vụ, API integration hay Redis integration vào backend.
 
 ```text
 BF-001: Completed
@@ -69,6 +69,7 @@ BF-003: Completed
 BF-004: Completed
 BF-005: In progress — production audit đã sạch sau overrides, nhưng cây dependency còn lỗi `npm ls` cần xử lý
 BF-006: Completed
+BF-007: Completed
 ```
 
 ## Infrastructure local quick start
@@ -94,7 +95,8 @@ Xem hướng dẫn tại [PostgreSQL local bằng Docker Compose](docs/setup/pos
 ## Backend quick start
 
 ```powershell
-.\apps\api\mvnw.cmd clean verify
+.\apps\api\mvnw.cmd clean test    # Unit và application-context test, không chạy container
+.\apps\api\mvnw.cmd clean verify  # Bao gồm PostgreSQL Testcontainer integration test
 
 $env:SPRING_PROFILES_ACTIVE = "local"
 .\apps\api\mvnw.cmd spring-boot:run
@@ -102,7 +104,7 @@ $env:SPRING_PROFILES_ACTIVE = "local"
 
 Health URL: `http://127.0.0.1:8080/actuator/health`.
 
-Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, Redis integration, authentication hoặc booking API.
+Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, Redis integration, authentication hoặc booking API.
 
 ## Frontend quick start
 

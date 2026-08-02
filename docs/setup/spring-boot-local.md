@@ -88,9 +88,9 @@ Không kill tiến trình khác đang chiếm port.
 
 ## Quan hệ với PostgreSQL và Redis
 
-PostgreSQL và Redis tiếp tục chạy qua Docker Compose. BF-006 kết nối profile local tới PostgreSQL và chạy migration từ `classpath:db/migration`; Redis vẫn chưa được tích hợp. Unit/application-context build không cần Docker nhờ profile test riêng. Flyway integration test hiện dùng PostgreSQL local; BF-007 sẽ thay bằng Testcontainers.
+PostgreSQL và Redis tiếp tục chạy qua Docker Compose. Profile local kết nối PostgreSQL và chạy migration từ `classpath:db/migration`; Redis vẫn chưa được tích hợp. `mvn clean test` không cần Docker nhờ profile test riêng. `mvn clean verify` chạy thêm PostgreSQL Testcontainer tạm, không dùng PostgreSQL local và không cần `BOOKFLOW_TEST_DB_*`.
 
-Hướng dẫn migration và lệnh `flyway-it` nằm tại [Quản lý migration với Flyway](flyway.md).
+Xem [Quản lý migration với Flyway](flyway.md) và [Integration test với Testcontainers](testcontainers.md).
 
 ## Troubleshooting
 

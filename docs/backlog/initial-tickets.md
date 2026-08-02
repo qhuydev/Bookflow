@@ -54,13 +54,15 @@
 
 > Đã xác minh V1 trên PostgreSQL 17 thật, Flyway validate thành công, lần migrate thứ hai không tạo migration mới, integration schema được cleanup và runtime health trả `UP`.
 
-## BF-007 — Testcontainers
+## BF-007 — Testcontainers (Hoàn thành)
 - Mục tiêu: tạo nền kiểm thử tích hợp với PostgreSQL thực.
-- Phạm vi: cấu hình Testcontainers và test base.
+- Phạm vi: PostgreSQL Testcontainer, Spring Boot Service Connection và Flyway integration test trong lifecycle Maven mặc định.
 - Không nằm trong phạm vi: bộ test nghiệp vụ đầy đủ.
-- Tiêu chí hoàn thành: test khởi tạo container chạy được khi Docker sẵn sàng.
-- Kiểm thử hoặc kiểm tra bắt buộc: integration test dùng PostgreSQL container.
+- Tiêu chí hoàn thành: `clean test` không tạo container; `clean verify` tự chạy integration test trên database tạm và container được cleanup.
+- Kiểm thử hoặc kiểm tra bắt buộc: hai lần `clean verify`, Flyway validate/migrate lại, container lifecycle và runtime local regression.
 - Ticket phụ thuộc: BF-004, BF-006.
+
+> Đã xác minh `clean test` không tạo container; hai lần `clean verify` tạo hai PostgreSQL Testcontainer độc lập, chạy `FlywayMigrationIT` không skipped và cleanup hoàn toàn. PostgreSQL/Redis Compose không bị ảnh hưởng.
 
 ## BF-008 — Global exception handling
 - Mục tiêu: chuẩn hóa lỗi API.

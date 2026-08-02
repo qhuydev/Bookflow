@@ -63,18 +63,15 @@ FROM flyway_schema_history
 ORDER BY installed_rank;
 ```
 
-## Integration test với PostgreSQL local
+## Integration test với Testcontainers
 
-BF-006 dùng database PostgreSQL local nhưng tạo schema tạm ngẫu nhiên `bf006_it_*`, chạy migration hai lần và chỉ xóa schema tạm đó sau test.
+BF-007 dùng PostgreSQL container tạm, do Spring Boot và Testcontainers tạo tự động. Test không đọc `BOOKFLOW_TEST_DB_*`, không dùng PostgreSQL Compose và không cần tạo schema test thủ công. Docker daemon vẫn phải hoạt động.
 
 ```powershell
-$env:BOOKFLOW_TEST_DB_URL = "jdbc:postgresql://127.0.0.1:5433/bookflow"
-$env:BOOKFLOW_TEST_DB_USERNAME = "bookflow"
-$env:BOOKFLOW_TEST_DB_PASSWORD = "<lấy từ .env local>"
-.\apps\api\mvnw.cmd clean verify -Pflyway-it
+.\apps\api\mvnw.cmd clean verify
 ```
 
-Profile `flyway-it` không tự skip khi thiếu biến môi trường. Lần migrate đầu phải chạy V1, `validate` phải thành công và lần migrate thứ hai phải chạy 0 migration mới.
+Spring Boot lấy JDBC/Flyway connection qua `@ServiceConnection`, tự chạy V1 khi context khởi động, rồi test chạy `validate` và xác nhận lần `migrate` tiếp theo có 0 migration mới. Xem [Integration test với Testcontainers](testcontainers.md).
 
 Kiểm tra migration được đóng gói trong executable JAR:
 
@@ -91,4 +88,4 @@ jar tf .\apps\api\target\bookflow-api-0.0.1-SNAPSHOT.jar |
 4. Chỉ cân nhắc `repair` sau khi đã review lịch sử database và có quyết định kỹ thuật rõ ràng; không dùng `repair` chỉ để che lỗi.
 5. Không sửa trực tiếp `flyway_schema_history` và không dùng `clean` trên database BookFlow.
 
-BF-007 sẽ thay phụ thuộc vào PostgreSQL local trong integration test bằng Testcontainers để test có database cô lập và tái lập tự động.
+Không dùng `repair` để che checksum mismatch và không sửa migration đã áp dụng. Database Testcontainer là tạm thời; runtime local vẫn dùng các biến `BOOKFLOW_DB_*` như trước.
