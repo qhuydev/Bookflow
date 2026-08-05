@@ -26,6 +26,10 @@ Sau khi khởi động backend local bằng lệnh trên, truy cập:
 
 Metadata hiện dùng title `BookFlow API` và version `v1`. BF-009 chưa tạo API nghiệp vụ, vì vậy `paths` có thể đang rỗng; các endpoint Actuator không được đưa vào tài liệu OpenAPI.
 
+## Thiết kế authentication
+
+[ADR 0001 — Authentication và refresh token](../../docs/adr/0001-authentication-and-refresh-token.md) đã chốt kiến trúc JWT access token, opaque refresh token, session rotation và browser security. [Security review](../../docs/security/authentication-security-review.md) ghi threat model và test matrix. Đây chỉ là tài liệu thiết kế BF-010; các endpoint login, refresh, logout và Spring Security chưa tồn tại trong runtime.
+
 `clean test` chạy unit/application-context test và MockMvc test cho error contract, không cần Docker. `clean verify` chạy thêm `FlywayMigrationIT`; Docker daemon phải hoạt động nhưng không cần biến `BOOKFLOW_TEST_DB_*` hoặc PostgreSQL local.
 
 Xem [Thiết lập Spring Boot local](../../docs/setup/spring-boot-local.md), [Quản lý migration với Flyway](../../docs/setup/flyway.md), [Integration test với Testcontainers](../../docs/setup/testcontainers.md) và [Chuẩn lỗi API](../../docs/standards/api-errors.md).

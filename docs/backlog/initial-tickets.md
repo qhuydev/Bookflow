@@ -84,13 +84,15 @@
 
 > Đã xác minh OpenAPI JSON và Swagger UI bằng HTTP test, full Maven verification và runtime profile `local`. Metadata đúng contract, tài liệu không chứa cấu hình nội bộ, regression BF-008 vẫn đạt và PostgreSQL/Redis Compose không bị ảnh hưởng.
 
-## BF-010 — Thiết kế authentication
+## BF-010 — Thiết kế authentication (Hoàn thành)
 - Mục tiêu: chốt thiết kế xác thực và refresh token.
 - Phạm vi: luồng, threat model, dữ liệu và acceptance criteria.
 - Không nằm trong phạm vi: triển khai hoàn chỉnh endpoint.
 - Tiêu chí hoàn thành: thiết kế được ghi bằng tài liệu/ADR và được review.
 - Kiểm thử hoặc kiểm tra bắt buộc: rà soát security và test strategy.
 - Ticket phụ thuộc: BF-002, BF-004, BF-009.
+
+> Deliverable là ADR trạng thái Accepted, authentication security review, threat model và test strategy. BF-010 chưa triển khai Spring Security, endpoint, schema hoặc migration authentication.
 
 ## BF-011 — Thiết kế multi-tenancy
 - Mục tiêu: chốt chiến lược shared schema với `business_id`.

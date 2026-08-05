@@ -8,4 +8,8 @@ ADR là tài liệu ngắn ghi lại một quyết định kiến trúc quan tr�
 - Trạng thái hợp lệ: `Proposed`, `Accepted`, `Superseded`, `Rejected`.
 - Mỗi ADR gồm các phần: **Context**, **Decision**, **Alternatives**, **Consequences**.
 
-BF-001 chỉ tạo hướng dẫn này; chưa tạo ADR kiến trúc chi tiết.
+## Danh sách ADR
+
+| ADR | Trạng thái | Ngày | Quyết định |
+|---|---|---|---|
+| [0001 — Authentication và refresh token](0001-authentication-and-refresh-token.md) | Accepted | 2026-08-03 | Access JWT, opaque refresh token, session lifecycle và browser security |
