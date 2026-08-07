@@ -94,13 +94,15 @@
 
 > Deliverable là ADR trạng thái Accepted, authentication security review, threat model và test strategy. BF-010 chưa triển khai Spring Security, endpoint, schema hoặc migration authentication.
 
-## BF-011 — Thiết kế multi-tenancy
+## BF-011 — Thiết kế multi-tenancy (Hoàn thành)
 - Mục tiêu: chốt chiến lược shared schema với `business_id`.
 - Phạm vi: tenant context, authorization, chiến lược truy vấn và test isolation.
 - Không nằm trong phạm vi: triển khai mọi module nghiệp vụ.
 - Tiêu chí hoàn thành: quy tắc tenant có thể kiểm thử và được ghi nhận.
 - Kiểm thử hoặc kiểm tra bắt buộc: threat/risk review và test matrix tenant isolation.
 - Ticket phụ thuộc: BF-006, BF-010.
+
+> Deliverable là ADR trạng thái Accepted, security review, membership/role model, tenant isolation invariants và test strategy. BF-011 chưa triển khai API, entity, migration, Spring Security hoặc tenant context runtime.
 
 ## BF-012 — CI nền tảng
 - Mục tiêu: tự động hóa kiểm tra cơ bản.

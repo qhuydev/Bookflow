@@ -45,7 +45,7 @@ Xây dựng một sản phẩm mẫu có kỷ luật kỹ thuật để thực h
 
 Kiến trúc chọn là **modular monolith**: các miền nghiệp vụ được tách module rõ ràng nhưng vẫn triển khai cùng một ứng dụng. Cách này giảm độ phức tạp vận hành ban đầu, giữ giao dịch booking nhất quán và vẫn tạo ranh giới tốt để có thể tách dịch vụ khi có lý do thực tế.
 
-Multi-tenancy dùng shared database/shared schema; dữ liệu tenant được cách ly bằng `business_id`.
+Multi-tenancy dùng shared database/shared schema; business là tenant và mọi dữ liệu nghiệp vụ tenant-owned sẽ được cách ly bằng `tenant_id`. Các tài liệu cũ dùng `business_id` để chỉ cùng ranh giới business.
 
 ## Cấu trúc repository
 
@@ -73,6 +73,7 @@ BF-007: Completed
 BF-008: Completed
 BF-009: Completed
 BF-010: Completed — design only, chưa triển khai authentication runtime
+BF-011: Completed — design only, chưa triển khai multi-tenancy runtime
 ```
 
 ## Infrastructure local quick start
@@ -109,7 +110,7 @@ Health URL: `http://127.0.0.1:8080/actuator/health`.
 
 Khi backend đang chạy, OpenAPI JSON có tại `http://127.0.0.1:8080/v3/api-docs` và Swagger UI có tại `http://127.0.0.1:8080/swagger-ui/index.html`. Tài liệu hiện chưa có API nghiệp vụ nên object `paths` có thể rỗng.
 
-Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md), [chuẩn lỗi API](docs/standards/api-errors.md), [ADR authentication và refresh token](docs/adr/0001-authentication-and-refresh-token.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, Redis integration, authentication runtime hoặc booking API.
+Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md), [chuẩn lỗi API](docs/standards/api-errors.md), [ADR authentication](docs/adr/0001-authentication-and-refresh-token.md), [ADR multi-tenancy](docs/adr/0002-multi-tenancy-and-membership.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, Redis integration, authentication runtime, multi-tenancy runtime hoặc booking API.
 
 ## Frontend quick start
 

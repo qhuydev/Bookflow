@@ -13,3 +13,4 @@ ADR là tài liệu ngắn ghi lại một quyết định kiến trúc quan tr�
 | ADR | Trạng thái | Ngày | Quyết định |
 |---|---|---|---|
 | [0001 — Authentication và refresh token](0001-authentication-and-refresh-token.md) | Accepted | 2026-08-03 | Access JWT, opaque refresh token, session lifecycle và browser security |
+| [0002 — Multi-tenancy và membership](0002-multi-tenancy-and-membership.md) | Accepted | 2026-08-05 | Tenant context, membership, role và isolation dữ liệu |
