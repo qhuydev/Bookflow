@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Make Maven wrapper executable
+        run: chmod +x apps/api/mvnw
+
+      - name: Backend unit tests
+        working-directory: apps/api
+        run: ./mvnw -B test
+
+      - name: Backend integration tests
+        working-directory: apps/api
+        run: ./mvnw -B verify
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Frontend lint
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Frontend typecheck
+        working-directory: apps/web
+        run: npm run typecheck
+
+      - name: Frontend unit tests
+        working-directory: apps/web
+        run: npm run test -- --maxWorkers=1 --no-file-parallelism
+
+      - name: Frontend production build
+        working-directory: apps/web
+        run: npm run build
+
+  repository:
+    name: Repository checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run repository prerequisite checks
+        run: bash ./scripts/check-prerequisites.sh
+
+      - name: Check for patch formatting issues
+        run: git diff --check
