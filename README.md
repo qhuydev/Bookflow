@@ -76,6 +76,27 @@ BF-010: Completed — design only, chưa triển khai authentication runtime
 BF-011: Completed — design only, chưa triển khai multi-tenancy runtime
 ```
 
+## CI GitHub Actions
+
+Workflow CI tại [.github/workflows/ci.yml](.github/workflows/ci.yml) chạy kiểm tra backend, frontend và repository trên mỗi push vào `main` và mỗi pull request. Nội dung kiểm tra bao gồm:
+
+- Backend: Maven `test` và `verify` (bao gồm integration test Flyway/Testcontainers).
+- Frontend: `npm ci`, ESLint, TypeScript typecheck, Vitest và production build.
+- Repository: script kiểm tra môi trường `scripts/check-prerequisites.sh` và `git diff --check`.
+
+Các lệnh local tương đương:
+
+```powershell
+.\apps\api\mvnw.cmd test
+.\apps\api\mvnw.cmd verify
+npm --prefix .\apps\web ci
+npm --prefix .\apps\web run lint
+npm --prefix .\apps\web run typecheck
+npm --prefix .\apps\web run test -- --maxWorkers=1 --minWorkers=1
+npm --prefix .\apps\web run build
+bash ./scripts/check-prerequisites.sh
+```
+
 ## Infrastructure local quick start
 
 Sao chép `.env.example` thành `.env`, thay password local mạnh (không commit file này), rồi chạy:
