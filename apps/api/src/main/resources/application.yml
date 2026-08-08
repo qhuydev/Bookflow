@@ -2,6 +2,16 @@ spring:
   application:
     name: bookflow-api
 
+bookflow:
+  authentication:
+    password:
+      argon2:
+        salt-length: 16
+        hash-length: 32
+        parallelism: 1
+        memory-kib: 19456
+        iterations: 2
+
 server:
   error:
     include-message: never

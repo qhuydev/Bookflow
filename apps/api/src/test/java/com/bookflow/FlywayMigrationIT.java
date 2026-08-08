@@ -29,15 +29,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FlywayMigrationIT {
 
     private static final List<String> FORBIDDEN_BUSINESS_TABLES = List.of(
-            "users",
             "businesses",
             "branches",
             "employees",
             "services",
             "schedules",
             "bookings",
-            "payments",
-            "refresh_tokens"
+            "payments"
     );
 
     @Autowired
@@ -62,6 +60,8 @@ class FlywayMigrationIT {
 
         MigrationInfo versionOne = findVersionOneMigration();
         assertThat(versionOne.getChecksum()).isEqualTo(baseline.checksum());
+        MigrationInfo versionTwo = findMigration("2");
+        assertThat(versionTwo.getDescription()).isEqualTo("authentication schema");
         assertThat(flyway.validateWithResult().validationSuccessful).isTrue();
         assertThat(flyway.info().pending()).isEmpty();
 
@@ -69,7 +69,8 @@ class FlywayMigrationIT {
         assertThat(repeatedMigration.success).isTrue();
         assertThat(repeatedMigration.migrationsExecuted).isZero();
         assertThat(countBaselineRows()).isEqualTo(1);
-        assertOnlyFlywayHistoryTableExists();
+        assertThat(countMigrationRows("2")).isEqualTo(1);
+        assertExpectedTablesExist();
     }
 
     private void assertTestcontainerConnection() throws SQLException {
@@ -111,23 +112,31 @@ class FlywayMigrationIT {
     }
 
     private int countBaselineRows() throws SQLException {
+        return countMigrationRows("1");
+    }
+
+    private int countMigrationRows(String version) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(
-                     "SELECT COUNT(*) FROM public.flyway_schema_history WHERE version = '1'")) {
+                     "SELECT COUNT(*) FROM public.flyway_schema_history WHERE version = '" + version + "'")) {
             assertThat(resultSet.next()).isTrue();
             return resultSet.getInt(1);
         }
     }
 
     private MigrationInfo findVersionOneMigration() {
-        return List.of(flyway.info().all()).stream()
-                .filter(info -> MigrationVersion.fromVersion("1").equals(info.getVersion()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Flyway version 1 was not found"));
+        return findMigration("1");
     }
 
-    private void assertOnlyFlywayHistoryTableExists() throws SQLException {
+    private MigrationInfo findMigration(String version) {
+        return List.of(flyway.info().all()).stream()
+                .filter(info -> MigrationVersion.fromVersion(version).equals(info.getVersion()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Flyway version " + version + " was not found"));
+    }
+
+    private void assertExpectedTablesExist() throws SQLException {
         List<String> tables = new ArrayList<>();
         String sql = "SELECT table_name FROM information_schema.tables "
                 + "WHERE table_schema = 'public' AND table_type = 'BASE TABLE' ORDER BY table_name";
@@ -140,7 +149,12 @@ class FlywayMigrationIT {
             }
         }
 
-        assertThat(tables).containsExactly("flyway_schema_history");
+        assertThat(tables).containsExactly(
+                "auth_sessions",
+                "flyway_schema_history",
+                "refresh_tokens",
+                "users"
+        );
         assertThat(tables).doesNotContainAnyElementsOf(FORBIDDEN_BUSINESS_TABLES);
     }
 

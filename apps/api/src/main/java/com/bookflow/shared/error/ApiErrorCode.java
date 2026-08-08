@@ -23,6 +23,12 @@ public enum ApiErrorCode {
             "Invalid request",
             "The request is invalid."
     ),
+    EMAIL_ALREADY_REGISTERED(
+            HttpStatus.CONFLICT,
+            "email-already-registered",
+            "Email already registered",
+            "An account with this email already exists."
+    ),
     RESOURCE_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "resource-not-found",

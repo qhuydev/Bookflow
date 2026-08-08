@@ -111,3 +111,23 @@
 - Tiêu chí hoàn thành: workflow chạy các kiểm tra có ý nghĩa, không lộ secret.
 - Kiểm thử hoặc kiểm tra bắt buộc: validate workflow và chạy CI trên nhánh thử nghiệm.
 - Ticket phụ thuộc: BF-004, BF-005, BF-007.
+
+## BF-013 — Authentication database schema (Hoàn thành)
+- Mục tiêu: thiết lập schema PostgreSQL tối thiểu cho xác thực, session và refresh token theo ADR BF-010.
+- Phạm vi: Flyway migration V2 cho `users`, `auth_sessions`, `refresh_tokens`, constraint, index và integration test Testcontainers.
+- Không nằm trong phạm vi: API, JPA entity/repository, Spring Security, JWT, giao diện, membership và schema tenant.
+- Tiêu chí hoàn thành: migration tạo đúng bảng xác thực; email chuẩn hóa và token hash là duy nhất; quan hệ user/session/token, trạng thái và thời hạn bị ràng buộc; không tạo bảng nghiệp vụ.
+- Kiểm thử hoặc kiểm tra bắt buộc: `mvn clean test`, `mvn clean verify`, Flyway validate/migrate lại và kiểm tra constraint trên PostgreSQL Testcontainer.
+- Ticket phụ thuộc: BF-006, BF-007, BF-010, BF-011.
+
+> Đã xác minh trên PostgreSQL 17 Testcontainer: V1 và V2 chạy thành công, validate đạt, chạy migrate lại không có migration mới; unique email chuẩn hóa/token hash, quan hệ session-token và các constraint thời hạn được kiểm thử.
+
+## BF-014 — User Registration và Argon2id Password Hashing (Hoàn thành)
+- Mục tiêu: cho phép đăng ký user toàn cục an toàn bằng email/password.
+- Phạm vi: `POST /api/v1/auth/register`, chuẩn hóa email, password policy, Argon2id, JDBC persistence, OpenAPI và test Testcontainers.
+- Không nằm trong phạm vi: login, JWT, refresh token, session, logout, tenant, membership, authorization, Redis và frontend.
+- Tiêu chí hoàn thành: chỉ một user được tạo cho mỗi normalized email; password chỉ được lưu dưới dạng Argon2id hash; response và lỗi không lộ dữ liệu nhạy cảm.
+- Kiểm thử hoặc kiểm tra bắt buộc: `mvn clean test`, `mvn clean verify`, kiểm tra hash, duplicate email, concurrent registration và không tạo session/token.
+- Ticket phụ thuộc: BF-008, BF-009, BF-010, BF-013.
+
+> Đã xác minh với PostgreSQL 17 Testcontainer: endpoint trả `201`, email được chuẩn hóa, hash Argon2id được kiểm tra, duplicate/concurrent registration trả đúng một `201` và một `409`, không tạo `auth_sessions` hoặc `refresh_tokens`.

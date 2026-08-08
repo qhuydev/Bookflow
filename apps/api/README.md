@@ -24,11 +24,11 @@ Sau khi khởi động backend local bằng lệnh trên, truy cập:
 - OpenAPI JSON: `http://127.0.0.1:8080/v3/api-docs`.
 - Swagger UI: `http://127.0.0.1:8080/swagger-ui/index.html`.
 
-Metadata hiện dùng title `BookFlow API` và version `v1`. BF-009 chưa tạo API nghiệp vụ, vì vậy `paths` có thể đang rỗng; các endpoint Actuator không được đưa vào tài liệu OpenAPI.
+Metadata hiện dùng title `BookFlow API` và version `v1`. OpenAPI hiện mô tả `POST /api/v1/auth/register`; các endpoint Actuator không được đưa vào tài liệu này.
 
 ## Thiết kế authentication
 
-[ADR 0001 — Authentication và refresh token](../../docs/adr/0001-authentication-and-refresh-token.md) đã chốt kiến trúc JWT access token, opaque refresh token, session rotation và browser security. [Security review](../../docs/security/authentication-security-review.md) ghi threat model và test matrix. Đây chỉ là tài liệu thiết kế BF-010; các endpoint login, refresh, logout và Spring Security chưa tồn tại trong runtime.
+[ADR 0001 — Authentication và refresh token](../../docs/adr/0001-authentication-and-refresh-token.md) đã chốt kiến trúc JWT access token, opaque refresh token, session rotation và browser security. [Security review](../../docs/security/authentication-security-review.md) ghi threat model và test matrix. BF-014 đã có `POST /api/v1/auth/register`: email được chuẩn hóa và password được lưu bằng Argon2id. Login, refresh, logout và Spring Security chưa tồn tại trong runtime.
 
 ## Thiết kế multi-tenancy
 

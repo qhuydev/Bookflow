@@ -1,5 +1,6 @@
 package com.bookflow.shared.error;
 
+import com.bookflow.authentication.application.EmailAlreadyRegisteredException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -50,6 +51,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException exception, WebRequest request) {
         return problem(ApiErrorCode.RESOURCE_NOT_FOUND, exception.getPublicDetail(), request, List.of());
+    }
+
+    @ExceptionHandler(RequestValidationException.class)
+    ResponseEntity<Object> handleRequestValidation(RequestValidationException exception, WebRequest request) {
+        return problem(ApiErrorCode.VALIDATION_ERROR, null, request, stable(exception.violations()));
+    }
+
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    ResponseEntity<Object> handleEmailAlreadyRegistered(
+            EmailAlreadyRegisteredException exception,
+            WebRequest request
+    ) {
+        return problem(ApiErrorCode.EMAIL_ALREADY_REGISTERED, null, request, List.of());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

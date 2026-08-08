@@ -60,7 +60,7 @@ tests/      # Tài nguyên kiểm thử dùng chung trong tương lai
 
 ## Trạng thái hiện tại
 
-Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL, Redis local, nền backend Spring Boot, nền frontend Next.js, Flyway baseline, PostgreSQL integration test bằng Testcontainers, error contract API dựa trên `ProblemDetail`, OpenAPI JSON và Swagger UI. Thiết kế authentication/refresh token đã được chốt bằng ADR; authentication runtime, schema nghiệp vụ, API nghiệp vụ và Redis integration vào backend chưa được triển khai.
+Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL, Redis local, nền backend Spring Boot, nền frontend Next.js, Flyway baseline, PostgreSQL integration test bằng Testcontainers, error contract API dựa trên `ProblemDetail`, OpenAPI JSON và Swagger UI. Đăng ký user toàn cục với Argon2id đã có; login, JWT, refresh token, authorization, schema nghiệp vụ và Redis integration vào backend chưa được triển khai.
 
 ```text
 BF-001: Completed
@@ -74,6 +74,8 @@ BF-008: Completed
 BF-009: Completed
 BF-010: Completed — design only, chưa triển khai authentication runtime
 BF-011: Completed — design only, chưa triển khai multi-tenancy runtime
+BF-013: Completed — authentication database schema
+BF-014: Completed — user registration và Argon2id password hashing
 ```
 
 ## CI GitHub Actions
@@ -129,9 +131,9 @@ $env:SPRING_PROFILES_ACTIVE = "local"
 
 Health URL: `http://127.0.0.1:8080/actuator/health`.
 
-Khi backend đang chạy, OpenAPI JSON có tại `http://127.0.0.1:8080/v3/api-docs` và Swagger UI có tại `http://127.0.0.1:8080/swagger-ui/index.html`. Tài liệu hiện chưa có API nghiệp vụ nên object `paths` có thể rỗng.
+Khi backend đang chạy, OpenAPI JSON có tại `http://127.0.0.1:8080/v3/api-docs` và Swagger UI có tại `http://127.0.0.1:8080/swagger-ui/index.html`. Hiện có contract `POST /api/v1/auth/register`; các API nghiệp vụ khác chưa được triển khai.
 
-Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md), [chuẩn lỗi API](docs/standards/api-errors.md), [ADR authentication](docs/adr/0001-authentication-and-refresh-token.md), [ADR multi-tenancy](docs/adr/0002-multi-tenancy-and-membership.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, Redis integration, authentication runtime, multi-tenancy runtime hoặc booking API.
+Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md), [chuẩn lỗi API](docs/standards/api-errors.md), [ADR authentication](docs/adr/0001-authentication-and-refresh-token.md), [ADR multi-tenancy](docs/adr/0002-multi-tenancy-and-membership.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, Redis integration, login/JWT/refresh token, multi-tenancy runtime hoặc booking API.
 
 ## Frontend quick start
 
