@@ -47,6 +47,12 @@ public enum ApiErrorCode {
             "Authentication failed",
             "The authenticated user is not available."
     ),
+    TENANT_PERMISSION_DENIED(
+            HttpStatus.FORBIDDEN,
+            "tenant-permission-denied",
+            "Tenant permission denied",
+            "The current membership does not have the required permission."
+    ),
     AUTH_REFRESH_INVALID(HttpStatus.UNAUTHORIZED, "auth-refresh-invalid", "Refresh failed", "The refresh session is not valid."),
     AUTH_REFRESH_MISSING(HttpStatus.UNAUTHORIZED, "auth-refresh-missing", "Refresh failed", "A refresh session is required."),
     AUTH_REFRESH_REUSE(HttpStatus.UNAUTHORIZED, "auth-refresh-reuse", "Refresh failed", "The refresh session is not valid."),

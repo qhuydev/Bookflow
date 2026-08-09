@@ -6,13 +6,12 @@ import com.bookflow.businesses.domain.BusinessStatus;
 import com.bookflow.businesses.domain.BusinessType;
 import com.bookflow.businesses.domain.MembershipRole;
 import com.bookflow.businesses.domain.MembershipStatus;
-import com.bookflow.businesses.repository.BusinessQueryRepository;
-import com.bookflow.shared.error.ResourceNotFoundException;
+import com.bookflow.businesses.authorization.TenantAuthorizationService;
+import com.bookflow.businesses.authorization.TenantPermission;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,35 +20,33 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class BusinessQueryServiceTest {
-    private final BusinessQueryRepository repository = mock(BusinessQueryRepository.class);
-    private final BusinessQueryService service = new BusinessQueryService(repository);
+    private final TenantAuthorizationService authorization = mock(TenantAuthorizationService.class);
+    private final BusinessQueryService service = new BusinessQueryService(authorization);
 
     @Test
     void returnsOnlyRepositoryResultsForActiveCurrentUser() {
         UUID userId = UUID.randomUUID();
         BusinessMembershipView view = view();
-        when(repository.hasActiveUser(userId)).thenReturn(true);
-        when(repository.findActiveBusinessesForUser(userId)).thenReturn(List.of(view));
+        when(authorization.listVisibleBusinesses(userId)).thenReturn(List.of(view));
 
         assertThat(service.listForCurrentUser(userId)).containsExactly(view);
     }
 
     @Test
-    void missingOrInaccessibleBusinessUsesNeutralNotFound() {
+    void detailDelegatesBusinessViewPermissionToSharedAuthorization() {
         UUID userId = UUID.randomUUID();
         UUID businessId = UUID.randomUUID();
-        when(repository.hasActiveUser(userId)).thenReturn(true);
-        when(repository.findActiveBusinessForUser(userId, businessId)).thenReturn(Optional.empty());
+        BusinessMembershipView view = view();
+        when(authorization.requirePermission(userId, businessId, TenantPermission.BUSINESS_VIEW)).thenReturn(view);
 
-        assertThatThrownBy(() -> service.getForCurrentUser(userId, businessId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("The requested resource was not found.");
+        assertThat(service.getForCurrentUser(userId, businessId)).isEqualTo(view);
     }
 
     @Test
-    void inactiveOrMissingCurrentUserIsRejectedBeforeQuery() {
+    void authorizationErrorIsNotChangedByQueryService() {
         UUID userId = UUID.randomUUID();
-        when(repository.hasActiveUser(userId)).thenReturn(false);
+        when(authorization.listVisibleBusinesses(userId))
+                .thenThrow(new CurrentBusinessUserUnavailableException());
 
         assertThatThrownBy(() -> service.listForCurrentUser(userId))
                 .isInstanceOf(CurrentBusinessUserUnavailableException.class);

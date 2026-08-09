@@ -2,6 +2,9 @@ package com.bookflow.businesses;
 
 import com.bookflow.BookFlowApplication;
 import com.bookflow.support.PostgresTestcontainerConfiguration;
+import com.bookflow.businesses.authorization.TenantAuthorizationService;
+import com.bookflow.businesses.authorization.TenantPermission;
+import com.bookflow.businesses.authorization.TenantPermissionDeniedException;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +22,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,6 +36,7 @@ class BusinessQueryIT {
 
     @Autowired WebApplicationContext context;
     @Autowired JdbcTemplate jdbc;
+    @Autowired TenantAuthorizationService tenantAuthorization;
 
     @AfterEach
     void clearTables() {
@@ -92,6 +97,32 @@ class BusinessQueryIT {
                 .andReturn().getResponse().getStatus()).isEqualTo(400);
         assertThat(mvc.perform(get("/api/v1/businesses").header("Authorization", "Bearer invalid-jwt"))
                 .andReturn().getResponse().getStatus()).isEqualTo(401);
+    }
+
+    @Test
+    void currentMembershipStateAndPermissionMatrixAreEnforcedAgainstPostgres() throws Exception {
+        MockMvc mvc = secureMvc();
+        Login owner = registerAndLogin(mvc, "owner-" + UUID.randomUUID() + "@example.test");
+        Login admin = registerAndLogin(mvc, "admin-" + UUID.randomUUID() + "@example.test");
+        Login staff = registerAndLogin(mvc, "staff-" + UUID.randomUUID() + "@example.test");
+        UUID ownerBusiness = insertBusiness("owner-role-" + UUID.randomUUID(), "ACTIVE");
+        UUID adminBusiness = insertBusiness("admin-role-" + UUID.randomUUID(), "ACTIVE");
+        UUID staffBusiness = insertBusiness("staff-role-" + UUID.randomUUID(), "ACTIVE");
+        insertMembership(ownerBusiness, owner.userId(), "OWNER", "ACTIVE");
+        insertMembership(adminBusiness, admin.userId(), "ADMIN", "ACTIVE");
+        insertMembership(staffBusiness, staff.userId(), "STAFF", "ACTIVE");
+
+        assertThat(tenantAuthorization.requirePermission(owner.userId(), ownerBusiness, TenantPermission.BUSINESS_CLOSE).membershipRole()).isEqualTo(com.bookflow.businesses.domain.MembershipRole.OWNER);
+        assertThat(tenantAuthorization.requirePermission(admin.userId(), adminBusiness, TenantPermission.BUSINESS_CONFIGURATION_MANAGE).membershipRole()).isEqualTo(com.bookflow.businesses.domain.MembershipRole.ADMIN);
+        assertThat(tenantAuthorization.requirePermission(staff.userId(), staffBusiness, TenantPermission.BUSINESS_VIEW).membershipRole()).isEqualTo(com.bookflow.businesses.domain.MembershipRole.STAFF);
+        assertThatThrownBy(() -> tenantAuthorization.requirePermission(staff.userId(), staffBusiness, TenantPermission.BUSINESS_CONFIGURATION_MANAGE))
+                .isInstanceOf(TenantPermissionDeniedException.class);
+
+        assertThat(mvc.perform(get("/api/v1/businesses/{id}", staffBusiness).header("Authorization", "Bearer " + staff.accessToken()))
+                .andReturn().getResponse().getStatus()).isEqualTo(200);
+        jdbc.update("UPDATE business_memberships SET status='REVOKED', revoked_at=CURRENT_TIMESTAMP WHERE tenant_id=? AND user_id=?", staffBusiness, staff.userId());
+        assertThat(mvc.perform(get("/api/v1/businesses/{id}", staffBusiness).header("Authorization", "Bearer " + staff.accessToken()))
+                .andReturn().getResponse().getStatus()).isEqualTo(404);
     }
 
     private MockMvc secureMvc() { return MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build(); }

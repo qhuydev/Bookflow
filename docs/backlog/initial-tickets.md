@@ -199,3 +199,24 @@
 - Tiêu chí hoàn thành: không đọc chéo tenant, inactive business/membership bị ẩn, UUID sai là `400`, access không hợp lệ/không thuộc user là `404` trung tính và full `clean verify` pass.
 - Kiểm thử: unit service, PostgreSQL Testcontainers cho isolation/status/empty list, JWT/UUID error và regression BF-023/BF-024/authentication.
 - Ticket phụ thuộc: BF-011, BF-013, BF-022.
+
+## BF-026 — Tenant authorization dùng chung (Hoàn thành)
+
+- Mục tiêu: resolve user JWT và membership/business active từ PostgreSQL cho các service tenant-scoped.
+- Phạm vi: `TenantAuthorizationService`, JDBC lookup trực tiếp và mapping access ngoài tenant sang `404`.
+- Không nằm trong phạm vi: tenant switch, ThreadLocal context, header tenant, migration hoặc API membership.
+- Tiêu chí hoàn thành: membership revoke/suspend và business inactive mất quyền ở request sau dù JWT còn hạn.
+
+## BF-027 — Role authorization matrix (Hoàn thành)
+
+- Mục tiêu: áp dụng permission tường minh cho `OWNER`, `ADMIN`, `STAFF` theo ADR 0002.
+- Phạm vi: enum permission, matrix role, `403` khi membership active không đủ permission và test matrix.
+- Không nằm trong phạm vi: endpoint quản trị business hoặc membership mới.
+- Tiêu chí hoàn thành: không dùng so sánh ordinal role; permission deny không bị map thành `404` hoặc `401`.
+
+## BF-028 — Tenant security review và tài liệu Giai đoạn 3 (Hoàn thành)
+
+- Mục tiêu: kiểm thử isolation/revocation và chuẩn hóa tài liệu endpoint–role.
+- Phạm vi: Testcontainers security regression, tài liệu authorization và bảng matrix.
+- Không nằm trong phạm vi: Redis authorization, frontend, invitation, tenant switch hoặc schema mới.
+- Tiêu chí hoàn thành: full `clean verify` pass, không cross-tenant read và tài liệu nêu rõ `401`/`403`/`404`.

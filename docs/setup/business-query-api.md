@@ -9,7 +9,7 @@ Cả hai yêu cầu access token Bearer JWT hợp lệ. Vì là `GET`, chúng kh
 
 ## Tenant isolation
 
-JDBC query thực hiện một `JOIN` giữa `business_memberships` và `businesses`, rồi lọc ngay trong PostgreSQL theo:
+`TenantAuthorizationService` dùng JDBC query thực hiện một `JOIN` giữa `business_memberships` và `businesses`, rồi lọc ngay trong PostgreSQL theo:
 
 - `m.user_id` của authenticated user;
 - `m.status = ACTIVE`;
@@ -26,4 +26,4 @@ Response chỉ có dữ liệu business và membership của chính user hiện 
 - Business không tồn tại, bị inactive, membership inactive hoặc không thuộc user: cùng trả `404 RESOURCE_NOT_FOUND`, tránh lộ tenant.
 - Danh sách không có business phù hợp: `200` với `[]`.
 
-BF-025 không thêm pagination vì repository chưa có convention phân trang, và không triển khai update/delete business, invitation, quản lý membership, tenant context toàn cục hay authorization theo role.
+BF-025 không thêm pagination vì repository chưa có convention phân trang. Xem thêm [tenant authorization và permission matrix](tenant-authorization.md).

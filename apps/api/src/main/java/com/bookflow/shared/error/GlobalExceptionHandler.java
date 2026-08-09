@@ -6,6 +6,7 @@ import com.bookflow.authentication.application.InvalidPasswordResetTokenExceptio
 import com.bookflow.authentication.application.RefreshTokenException;
 import com.bookflow.businesses.application.BusinessSlugAlreadyExistsException;
 import com.bookflow.businesses.application.CurrentBusinessUserUnavailableException;
+import com.bookflow.businesses.authorization.TenantPermissionDeniedException;
 import com.bookflow.authentication.ratelimit.RateLimitExceededException;
 import com.bookflow.authentication.ratelimit.RateLimitUnavailableException;
 import jakarta.validation.ConstraintViolation;
@@ -87,6 +88,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request
     ) {
         return problem(ApiErrorCode.AUTH_CURRENT_USER_UNAVAILABLE, null, request, List.of());
+    }
+
+    @ExceptionHandler(TenantPermissionDeniedException.class)
+    ResponseEntity<Object> handleTenantPermissionDenied(
+            TenantPermissionDeniedException exception,
+            WebRequest request
+    ) {
+        return problem(ApiErrorCode.TENANT_PERMISSION_DENIED, null, request, List.of());
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)

@@ -2,6 +2,7 @@ package com.bookflow.shared.error;
 
 import bookflow.testfixture.ErrorHandlingTestController;
 import com.bookflow.BookFlowApplication;
+import com.bookflow.businesses.authorization.TenantPermissionDeniedException;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -156,6 +159,22 @@ class GlobalExceptionHandlerTest {
                 false
         );
         assertThat(problem.get("detail")).isEqualTo("The requested test resource was not found.");
+    }
+
+    @Test
+    void mapsActiveMembershipPermissionDenialToSafeForbiddenProblem() {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/businesses/example/configuration");
+        var response = new GlobalExceptionHandler().handleTenantPermissionDenied(
+                new TenantPermissionDeniedException(),
+                new ServletWebRequest(request)
+        );
+
+        assertThat(response.getStatusCode().value()).isEqualTo(403);
+        assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PROBLEM_JSON);
+        assertThat(response.getBody()).isInstanceOf(org.springframework.http.ProblemDetail.class);
+        org.springframework.http.ProblemDetail problem = (org.springframework.http.ProblemDetail) response.getBody();
+        assertThat(problem.getProperties()).containsEntry("code", "TENANT_PERMISSION_DENIED");
+        assertThat(problem.getDetail()).doesNotContain("OWNER", "ADMIN", "STAFF", "SQL");
     }
 
     @Test

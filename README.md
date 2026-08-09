@@ -84,6 +84,9 @@ BF-022: Completed — authentication final audit
 BF-023: Completed — business và business membership database schema
 BF-024: Completed — Create Business API và owner membership
 BF-025: Completed — xem business của user hiện tại
+BF-026: Completed — tenant authorization dùng chung
+BF-027: Completed — role permission matrix
+BF-028: Completed — tenant security review và tài liệu
 ```
 
 ## CI GitHub Actions
@@ -139,9 +142,9 @@ $env:SPRING_PROFILES_ACTIVE = "local"
 
 Health URL: `http://127.0.0.1:8080/actuator/health`.
 
-Khi backend đang chạy, OpenAPI JSON có tại `http://127.0.0.1:8080/v3/api-docs` và Swagger UI có tại `http://127.0.0.1:8080/swagger-ui/index.html`. Hiện có contract authentication, API tạo business và API xem business hiện tại; các API quản lý business khác chưa được triển khai.
+Khi backend đang chạy, OpenAPI JSON có tại `http://127.0.0.1:8080/v3/api-docs` và Swagger UI có tại `http://127.0.0.1:8080/swagger-ui/index.html`. API xem business dùng tenant authorization và permission matrix PostgreSQL; các API quản lý business khác chưa được triển khai.
 
-Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [schema business/membership](docs/setup/business-membership-schema.md), [API tạo business](docs/setup/business-creation-api.md), [API xem business](docs/setup/business-query-api.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md), [chuẩn lỗi API](docs/standards/api-errors.md), [ADR authentication](docs/adr/0001-authentication-and-refresh-token.md), [ADR multi-tenancy](docs/adr/0002-multi-tenancy-and-membership.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, tenant context runtime, authorization theo role hoặc booking API.
+Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [schema business/membership](docs/setup/business-membership-schema.md), [API tạo business](docs/setup/business-creation-api.md), [API xem business](docs/setup/business-query-api.md), [tenant authorization](docs/setup/tenant-authorization.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md), [chuẩn lỗi API](docs/standards/api-errors.md), [ADR authentication](docs/adr/0001-authentication-and-refresh-token.md), [ADR multi-tenancy](docs/adr/0002-multi-tenancy-and-membership.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, tenant context switch, API quản lý membership hoặc booking API.
 
 ## Frontend quick start
 
