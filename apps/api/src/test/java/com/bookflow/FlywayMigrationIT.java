@@ -62,6 +62,8 @@ class FlywayMigrationIT {
         assertThat(versionOne.getChecksum()).isEqualTo(baseline.checksum());
         MigrationInfo versionTwo = findMigration("2");
         assertThat(versionTwo.getDescription()).isEqualTo("authentication schema");
+        MigrationInfo versionThree = findMigration("3");
+        assertThat(versionThree.getDescription()).isEqualTo("password reset tokens");
         assertThat(flyway.validateWithResult().validationSuccessful).isTrue();
         assertThat(flyway.info().pending()).isEmpty();
 
@@ -70,6 +72,7 @@ class FlywayMigrationIT {
         assertThat(repeatedMigration.migrationsExecuted).isZero();
         assertThat(countBaselineRows()).isEqualTo(1);
         assertThat(countMigrationRows("2")).isEqualTo(1);
+        assertThat(countMigrationRows("3")).isEqualTo(1);
         assertExpectedTablesExist();
     }
 
@@ -152,6 +155,7 @@ class FlywayMigrationIT {
         assertThat(tables).containsExactly(
                 "auth_sessions",
                 "flyway_schema_history",
+                "password_reset_tokens",
                 "refresh_tokens",
                 "users"
         );

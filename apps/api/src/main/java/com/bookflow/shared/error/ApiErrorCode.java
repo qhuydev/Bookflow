@@ -38,6 +38,24 @@ public enum ApiErrorCode {
     AUTH_REFRESH_INVALID(HttpStatus.UNAUTHORIZED, "auth-refresh-invalid", "Refresh failed", "The refresh session is not valid."),
     AUTH_REFRESH_MISSING(HttpStatus.UNAUTHORIZED, "auth-refresh-missing", "Refresh failed", "A refresh session is required."),
     AUTH_REFRESH_REUSE(HttpStatus.UNAUTHORIZED, "auth-refresh-reuse", "Refresh failed", "The refresh session is not valid."),
+    AUTH_PASSWORD_RESET_INVALID(
+            HttpStatus.BAD_REQUEST,
+            "auth-password-reset-invalid",
+            "Password reset failed",
+            "The password reset request is not valid."
+    ),
+    AUTH_RATE_LIMITED(
+            HttpStatus.TOO_MANY_REQUESTS,
+            "auth-rate-limited",
+            "Too many authentication requests",
+            "Too many requests. Try again later."
+    ),
+    AUTH_RATE_LIMIT_UNAVAILABLE(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "auth-rate-limit-unavailable",
+            "Authentication temporarily unavailable",
+            "Authentication is temporarily unavailable."
+    ),
     RESOURCE_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "resource-not-found",

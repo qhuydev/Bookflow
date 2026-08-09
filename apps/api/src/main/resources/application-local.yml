@@ -15,6 +15,12 @@ spring:
     out-of-order: false
     clean-disabled: true
 
+  data:
+    redis:
+      host: ${BOOKFLOW_REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+
 server:
   address: ${BOOKFLOW_API_ADDRESS:127.0.0.1}
   port: ${BOOKFLOW_API_PORT:8080}

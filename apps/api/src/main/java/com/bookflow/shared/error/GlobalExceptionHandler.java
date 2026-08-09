@@ -2,7 +2,10 @@ package com.bookflow.shared.error;
 
 import com.bookflow.authentication.application.EmailAlreadyRegisteredException;
 import com.bookflow.authentication.application.InvalidCredentialsException;
+import com.bookflow.authentication.application.InvalidPasswordResetTokenException;
 import com.bookflow.authentication.application.RefreshTokenException;
+import com.bookflow.authentication.ratelimit.RateLimitExceededException;
+import com.bookflow.authentication.ratelimit.RateLimitUnavailableException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -76,6 +79,26 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<Object> handleRefresh(RefreshTokenException exception, WebRequest request) {
         ApiErrorCode code = exception.kind == RefreshTokenException.Kind.MISSING ? ApiErrorCode.AUTH_REFRESH_MISSING : exception.kind == RefreshTokenException.Kind.REUSE ? ApiErrorCode.AUTH_REFRESH_REUSE : ApiErrorCode.AUTH_REFRESH_INVALID;
         return problem(code, null, request, List.of());
+    }
+
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    ResponseEntity<Object> handleInvalidPasswordResetToken(
+            InvalidPasswordResetTokenException exception,
+            WebRequest request
+    ) {
+        return problem(ApiErrorCode.AUTH_PASSWORD_RESET_INVALID, null, request, List.of());
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    ResponseEntity<Object> handleRateLimitExceeded(RateLimitExceededException exception, WebRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.RETRY_AFTER, Long.toString(exception.retryAfterSeconds()));
+        return problem(ApiErrorCode.AUTH_RATE_LIMITED, null, request, List.of(), headers);
+    }
+
+    @ExceptionHandler(RateLimitUnavailableException.class)
+    ResponseEntity<Object> handleRateLimitUnavailable(RateLimitUnavailableException exception, WebRequest request) {
+        return problem(ApiErrorCode.AUTH_RATE_LIMIT_UNAVAILABLE, null, request, List.of());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

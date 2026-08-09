@@ -6,3 +6,8 @@ spring:
     baseline-on-migrate: false
     out-of-order: false
     clean-disabled: true
+
+bookflow:
+  authentication:
+    rate-limit:
+      enabled: false

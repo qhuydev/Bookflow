@@ -1,6 +1,6 @@
 # Ticket khởi đầu
 
-> Trạng thái: **BF-001 đã hoàn thành sau kiểm tra**. Các ticket tiếp theo vẫn chưa được triển khai.
+> Trạng thái: các checkpoint nền BF-001 đến BF-019 được giữ nguyên; BF-020, BF-021 và BF-022 đã hoàn thành kiểm tra. BF-005 vẫn giữ trạng thái riêng đã ghi bên dưới.
 
 ## BF-001 — Khởi tạo monorepo và tài liệu nền (Hoàn thành)
 - Mục tiêu: tạo bộ khung repository và quy tắc phát triển.
@@ -131,3 +131,46 @@
 - Ticket phụ thuộc: BF-008, BF-009, BF-010, BF-013.
 
 > Đã xác minh với PostgreSQL 17 Testcontainer: endpoint trả `201`, email được chuẩn hóa, hash Argon2id được kiểm tra, duplicate/concurrent registration trả đúng một `201` và một `409`, không tạo `auth_sessions` hoặc `refresh_tokens`.
+
+## BF-015 — User Login và Authentication Session (Hoàn thành)
+
+- Mục tiêu: xác thực user và cấp session/token theo ADR BF-010.
+- Phạm vi: CSRF endpoint, login, Argon2id verify, JWT RS256, session PostgreSQL, refresh cookie HttpOnly và Testcontainers.
+- Không nằm trong phạm vi: refresh rotation, logout, authorization, rate limiting và frontend.
+- Tiêu chí hoàn thành: login yêu cầu CSRF, không trả/lưu raw refresh token và các test Maven đạt.
+- Kiểm thử: `clean test`, `clean verify`, Testcontainers login/CSRF/session/token hash và `git diff --check`.
+- Ticket phụ thuộc: BF-010, BF-013, BF-014.
+
+> Runtime smoke test local với RSA PEM do người dùng tự thực hiện; ticket không tạo hoặc commit key.
+
+## BF-017/018/019 — Session, Logout và Refresh Rotation (Completed)
+
+- Đã hoàn thành refresh rotation một lần, phát hiện reuse, logout hiện tại, logout-all bằng JWT principal, khóa PostgreSQL và bảo vệ CSRF.
+- Không nằm trong phạm vi: frontend, rate limiting, MFA hoặc thay đổi migration đã áp dụng.
+
+## BF-020 — Forgot/Reset Password (Hoàn thành)
+
+- Mục tiêu: khôi phục mật khẩu bằng token một lần mà không làm lộ account.
+- Phạm vi: forgot/reset API, SHA-256 token hash, TTL, notification port, Flyway V3, revoke authentication artifacts và PostgreSQL Testcontainers.
+- Không nằm trong phạm vi: email provider, frontend, MFA hoặc thay đổi migration cũ.
+- Tiêu chí hoàn thành: raw token chỉ đi qua notification port; reset atomic, dùng một lần, chống race và rollback đầy đủ; mọi token không hợp lệ dùng cùng public error.
+- Kiểm thử: enumeration, storage, expiration/reuse, concurrency, rollback, CSRF và migration constraint/index.
+- Ticket phụ thuộc: BF-014, BF-017/018/019.
+
+## BF-021 — Rate Limiting & Security Hardening (Hoàn thành)
+
+- Mục tiêu: bảo vệ authentication endpoint trước abuse mà không biến Redis thành nguồn sự thật xác thực.
+- Phạm vi: Redis atomic counter/TTL theo IP và account, privacy-safe key, trusted proxy, `429 Retry-After` và fail-closed.
+- Không nằm trong phạm vi: production proxy deployment, CAPTCHA, WAF hoặc in-memory limiter.
+- Tiêu chí hoàn thành: key không chứa identifier raw; concurrency chính xác; không tin forwarded header mặc định; Redis failure có policy rõ ràng.
+- Kiểm thử: Redis Testcontainers cho TTL/atomicity/concurrency/key privacy/failure, cùng regression JWT/rotation/CSRF.
+- Ticket phụ thuộc: BF-020 và Redis local.
+
+## BF-022 — Authentication Final Audit (Hoàn thành)
+
+- Mục tiêu: audit cuối chuỗi BF-013 đến BF-021 theo invariant bảo mật và dữ liệu.
+- Phạm vi: test coverage, JWT/CSRF, transaction/concurrency, token storage, Redis key privacy và Flyway V3.
+- Không nằm trong phạm vi: tính năng authentication mới, frontend, MFA hoặc authorization nghiệp vụ.
+- Tiêu chí hoàn thành: full `clean verify` không fail/error/skip bất thường; không có secret; migration/constraint/index và regression bảo mật đều đạt.
+- Kiểm thử: toàn bộ Maven verification, `git diff --check` và secret scan repository.
+- Ticket phụ thuộc: BF-013 đến BF-021.

@@ -24,6 +24,15 @@ bookflow:
       secure: ${BOOKFLOW_AUTH_REFRESH_COOKIE_SECURE:true}
       same-site: Lax
       path: /api/v1/auth
+    password-reset:
+      ttl-minutes: ${BOOKFLOW_AUTH_PASSWORD_RESET_TTL_MINUTES:30}
+    rate-limit:
+      enabled: ${BOOKFLOW_AUTH_RATE_LIMIT_ENABLED:true}
+      fail-open: ${BOOKFLOW_AUTH_RATE_LIMIT_FAIL_OPEN:false}
+      window-seconds: ${BOOKFLOW_AUTH_RATE_LIMIT_WINDOW_SECONDS:60}
+      account-limit: ${BOOKFLOW_AUTH_RATE_LIMIT_ACCOUNT_LIMIT:5}
+      ip-limit: ${BOOKFLOW_AUTH_RATE_LIMIT_IP_LIMIT:20}
+      trusted-proxies: ${BOOKFLOW_AUTH_RATE_LIMIT_TRUSTED_PROXIES:}
 
 server:
   error:
@@ -51,3 +60,8 @@ management:
   endpoint:
     health:
       show-details: never
+
+# Không để DEBUG logging của Spring MVC serialize access/CSRF token vào log.
+logging:
+  level:
+    org.springframework.web.servlet.mvc.method.annotation: INFO

@@ -16,6 +16,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -76,6 +77,84 @@ class AuthenticationSchemaMigrationIT {
 
         assertThatThrownBy(() -> insertSessionWithInvalidExpiry(UUID.randomUUID(), firstUserId))
                 .isInstanceOf(SQLException.class);
+    }
+
+    @Test
+    void enforcesPasswordResetTokenConstraintsAndIndexes() throws SQLException {
+        UUID userId = UUID.randomUUID();
+        insertUser(userId, "reset-schema-" + userId + "@example.test");
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+        insertPasswordResetToken(UUID.randomUUID(), userId, hash('e'), "ACTIVE",
+                now.plus(30, ChronoUnit.MINUTES), now, null, null, null);
+
+        assertThatThrownBy(() -> insertPasswordResetToken(UUID.randomUUID(), userId, hash('e'), "ACTIVE",
+                now.plus(30, ChronoUnit.MINUTES), now, null, null, null))
+                .isInstanceOf(SQLException.class);
+        assertThatThrownBy(() -> insertPasswordResetToken(UUID.randomUUID(), UUID.randomUUID(), hash('f'), "ACTIVE",
+                now.plus(30, ChronoUnit.MINUTES), now, null, null, null))
+                .isInstanceOf(SQLException.class);
+        assertThatThrownBy(() -> insertPasswordResetToken(UUID.randomUUID(), userId, hash('g'), "ACTIVE",
+                now, now, null, null, null))
+                .isInstanceOf(SQLException.class);
+        assertThatThrownBy(() -> insertPasswordResetToken(UUID.randomUUID(), userId, hash('h'), "USED",
+                now.plus(30, ChronoUnit.MINUTES), now, null, null, null))
+                .isInstanceOf(SQLException.class);
+        assertThatThrownBy(() -> insertPasswordResetToken(UUID.randomUUID(), userId, hash('i'), "REVOKED",
+                now.plus(30, ChronoUnit.MINUTES), now, null, null, null))
+                .isInstanceOf(SQLException.class);
+
+        assertThat(passwordResetIndexes()).contains(
+                "idx_password_reset_tokens_user_status",
+                "idx_password_reset_tokens_status_expires_at",
+                "password_reset_tokens_token_hash_key"
+        );
+    }
+
+    private void insertPasswordResetToken(
+            UUID id,
+            UUID userId,
+            String tokenHash,
+            String status,
+            Instant expiresAt,
+            Instant createdAt,
+            Instant usedAt,
+            Instant revokedAt,
+            String revokeReason
+    ) throws SQLException {
+        String sql = """
+                INSERT INTO password_reset_tokens (
+                    id, user_id, token_hash, status, expires_at, used_at,
+                    revoked_at, revoke_reason, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setObject(1, id);
+            statement.setObject(2, userId);
+            statement.setString(3, tokenHash);
+            statement.setString(4, status);
+            statement.setTimestamp(5, Timestamp.from(expiresAt));
+            statement.setTimestamp(6, usedAt == null ? null : Timestamp.from(usedAt));
+            statement.setTimestamp(7, revokedAt == null ? null : Timestamp.from(revokedAt));
+            statement.setString(8, revokeReason);
+            statement.setTimestamp(9, Timestamp.from(createdAt));
+            statement.setTimestamp(10, Timestamp.from(createdAt));
+            statement.executeUpdate();
+        }
+    }
+
+    private List<String> passwordResetIndexes() throws SQLException {
+        String sql = "SELECT indexname FROM pg_indexes WHERE schemaname='public' AND tablename='password_reset_tokens'";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            var indexes = new java.util.ArrayList<String>();
+            while (resultSet.next()) {
+                indexes.add(resultSet.getString(1));
+            }
+            return indexes;
+        }
     }
 
     private void insertUser(UUID id, String normalizedEmail) throws SQLException {

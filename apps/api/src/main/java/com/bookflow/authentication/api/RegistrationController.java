@@ -2,6 +2,9 @@ package com.bookflow.authentication.api;
 
 import com.bookflow.authentication.application.UserRegistrationService;
 import com.bookflow.authentication.domain.RegisteredUser;
+import com.bookflow.authentication.application.EmailNormalizer;
+import com.bookflow.authentication.ratelimit.AuthenticationRateLimiter;
+import jakarta.servlet.http.HttpServletRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -23,9 +26,14 @@ import jakarta.validation.Valid;
 public class RegistrationController {
 
     private final UserRegistrationService userRegistrationService;
+    private final AuthenticationRateLimiter rateLimiter;
 
-    public RegistrationController(UserRegistrationService userRegistrationService) {
+    public RegistrationController(
+            UserRegistrationService userRegistrationService,
+            AuthenticationRateLimiter rateLimiter
+    ) {
         this.userRegistrationService = userRegistrationService;
+        this.rateLimiter = rateLimiter;
     }
 
     @PostMapping("/register")
@@ -35,7 +43,11 @@ public class RegistrationController {
             @ApiResponse(responseCode = "400", description = "Invalid registration request"),
             @ApiResponse(responseCode = "409", description = "Email already registered")
     })
-    public ResponseEntity<RegisteredUserResponse> register(@Valid @RequestBody RegisterUserRequest request) {
+    public ResponseEntity<RegisteredUserResponse> register(
+            @Valid @RequestBody RegisterUserRequest request,
+            HttpServletRequest servletRequest
+    ) {
+        rateLimiter.check("register", EmailNormalizer.normalize(request.email()), servletRequest);
         RegisteredUser user = userRegistrationService.register(request.email(), request.password());
         return ResponseEntity.status(HttpStatus.CREATED).body(RegisteredUserResponse.from(user));
     }

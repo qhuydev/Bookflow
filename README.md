@@ -60,7 +60,7 @@ tests/      # Tài nguyên kiểm thử dùng chung trong tương lai
 
 ## Trạng thái hiện tại
 
-Dự án đang ở giai đoạn khởi tạo. Đã có PostgreSQL, Redis local, nền backend Spring Boot, nền frontend Next.js, Flyway baseline, PostgreSQL integration test bằng Testcontainers, error contract API dựa trên `ProblemDetail`, OpenAPI JSON và Swagger UI. Đăng ký user toàn cục với Argon2id đã có; login, JWT, refresh token, authorization, schema nghiệp vụ và Redis integration vào backend chưa được triển khai.
+Dự án đang ở giai đoạn xây dựng nền xác thực. Backend đã có đăng ký, đăng nhập JWT RS256, session/refresh rotation, logout, khôi phục mật khẩu và Redis rate limiting; PostgreSQL vẫn là nguồn sự thật cho user, session và token. Authorization nghiệp vụ, multi-tenancy runtime và schema booking chưa được triển khai.
 
 ```text
 BF-001: Completed
@@ -76,6 +76,11 @@ BF-010: Completed — design only, chưa triển khai authentication runtime
 BF-011: Completed — design only, chưa triển khai multi-tenancy runtime
 BF-013: Completed — authentication database schema
 BF-014: Completed — user registration và Argon2id password hashing
+BF-015: Completed — login, JWT RS256 và authentication session
+BF-017/018/019: Completed — refresh rotation, reuse detection và logout
+BF-020: Completed — forgot/reset password
+BF-021: Completed — Redis rate limiting và security hardening
+BF-022: Completed — authentication final audit
 ```
 
 ## CI GitHub Actions
@@ -171,3 +176,7 @@ Script chỉ kiểm tra, không tự cài bất kỳ công cụ nào. Java/JDK 2
 ## Bảo mật
 
 Không đưa secret, khóa API, mật khẩu, token hay file `.env` vào source code. Dùng biến môi trường và chỉ commit các file mẫu an toàn như `.env.example` khi cần.
+
+## Authentication hiện có
+
+Các endpoint authentication hiện có gồm đăng ký, đăng nhập, refresh, logout/logout-all và forgot/reset password. Mọi mutation ngoài đăng ký đều giữ CSRF; access token dùng JWT RS256, raw refresh/reset token không được lưu trong PostgreSQL. Redis chỉ giới hạn lưu lượng, không quyết định tính hợp lệ của credential hoặc session. Xem [authentication local](docs/setup/authentication-local.md) để cấu hình RSA PEM, Redis và chính sách local.
