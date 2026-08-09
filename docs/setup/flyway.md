@@ -12,7 +12,9 @@ Migration versioned đặt tên theo mẫu `V<version>__<description>.sql`, ví 
 
 ```text
 V1__baseline.sql
-V2__create_businesses.sql
+V2__authentication_schema.sql
+V3__password_reset_tokens.sql
+V4__business_and_membership_schema.sql
 ```
 
 Giữa version và description có hai dấu gạch dưới. Migration đã áp dụng là **immutable**: không đổi tên, sửa nội dung hoặc checksum. Thay đổi tiếp theo phải nằm trong một migration version mới.
@@ -71,13 +73,13 @@ BF-007 dùng PostgreSQL container tạm, do Spring Boot và Testcontainers tạo
 .\apps\api\mvnw.cmd clean verify
 ```
 
-Spring Boot lấy JDBC/Flyway connection qua `@ServiceConnection`, tự chạy V1 khi context khởi động, rồi test chạy `validate` và xác nhận lần `migrate` tiếp theo có 0 migration mới. Xem [Integration test với Testcontainers](testcontainers.md).
+Spring Boot lấy JDBC/Flyway connection qua `@ServiceConnection`, tự chạy toàn bộ migration hiện có khi context khởi động, rồi test chạy `validate` và xác nhận lần `migrate` tiếp theo có 0 migration mới. Xem [Integration test với Testcontainers](testcontainers.md).
 
 Kiểm tra migration được đóng gói trong executable JAR:
 
 ```powershell
 jar tf .\apps\api\target\bookflow-api-0.0.1-SNAPSHOT.jar |
-  Select-String "db/migration/V1__baseline.sql"
+  Select-String "db/migration/V4__business_and_membership_schema.sql"
 ```
 
 ## Xử lý checksum mismatch

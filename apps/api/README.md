@@ -1,6 +1,6 @@
 # BookFlow API
 
-Backend dùng Java 21, Spring Boot 4.1.0 và Maven Wrapper. Profile local kết nối PostgreSQL và Redis Compose; integration test dùng PostgreSQL/Redis Testcontainers tạm. Lỗi HTTP được chuẩn hóa bằng Spring `ProblemDetail`. Chưa có schema nghiệp vụ hoặc authorization theo tenant.
+Backend dùng Java 21, Spring Boot 4.1.0 và Maven Wrapper. Profile local kết nối PostgreSQL và Redis Compose; integration test dùng PostgreSQL/Redis Testcontainers tạm. Lỗi HTTP được chuẩn hóa bằng Spring `ProblemDetail`. Đã có schema business/membership, nhưng chưa có API hoặc authorization runtime theo tenant.
 
 BF-008 đã được xác minh bằng MockMvc, full Maven verification và runtime smoke test với profile `local`: Actuator health trả `UP`, endpoint không tồn tại trả `ENDPOINT_NOT_FOUND` theo error contract.
 
@@ -34,7 +34,7 @@ BF-015 bổ sung CSRF/login; BF-017/018/019 hoàn thiện refresh rotation, reus
 
 ## Thiết kế multi-tenancy
 
-[ADR 0002 — Multi-tenancy và membership](../../docs/adr/0002-multi-tenancy-and-membership.md) chốt business là tenant, membership nhiều business cho một user, role `OWNER`/`ADMIN`/`STAFF` và isolation bằng `tenant_id` lấy từ session/membership đã xác thực. [Security review](../../docs/security/multi-tenancy-security-review.md) ghi threat model và test matrix. Đây chỉ là tài liệu thiết kế BF-011; chưa có tenant context runtime, entity, migration hoặc API chuyển business.
+[ADR 0002 — Multi-tenancy và membership](../../docs/adr/0002-multi-tenancy-and-membership.md) chốt business là tenant, membership nhiều business cho một user, role `OWNER`/`ADMIN`/`STAFF` và isolation bằng `tenant_id` lấy từ session/membership đã xác thực. BF-023 thêm migration `V4` cho `businesses` và `business_memberships`; xem [schema business/membership](../../docs/setup/business-membership-schema.md). Chưa có tenant context runtime, repository nghiệp vụ, authorization hay API chuyển business.
 
 `clean test` chạy unit/application-context test và MockMvc test cho error contract, không cần Docker. `clean verify` chạy thêm `FlywayMigrationIT`; Docker daemon phải hoạt động nhưng không cần biến `BOOKFLOW_TEST_DB_*` hoặc PostgreSQL local.
 

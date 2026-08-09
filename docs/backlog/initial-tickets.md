@@ -1,6 +1,6 @@
 # Ticket khởi đầu
 
-> Trạng thái: các checkpoint nền BF-001 đến BF-019 được giữ nguyên; BF-020, BF-021 và BF-022 đã hoàn thành kiểm tra. BF-005 vẫn giữ trạng thái riêng đã ghi bên dưới.
+> Trạng thái: các checkpoint nền BF-001 đến BF-023 được giữ nguyên; BF-023 đã hoàn thành sau full Maven verification. BF-005 vẫn giữ trạng thái riêng đã ghi bên dưới.
 
 ## BF-001 — Khởi tạo monorepo và tài liệu nền (Hoàn thành)
 - Mục tiêu: tạo bộ khung repository và quy tắc phát triển.
@@ -174,3 +174,12 @@
 - Tiêu chí hoàn thành: full `clean verify` không fail/error/skip bất thường; không có secret; migration/constraint/index và regression bảo mật đều đạt.
 - Kiểm thử: toàn bộ Maven verification, `git diff --check` và secret scan repository.
 - Ticket phụ thuộc: BF-013 đến BF-021.
+
+## BF-023 — Business & Business Membership Database Schema (Hoàn thành)
+
+- Mục tiêu: tạo schema shared-schema cho business tenant và membership của user global.
+- Phạm vi: Flyway V4, business/membership model, constraint/index/FK và PostgreSQL Testcontainers test.
+- Không nằm trong phạm vi: API, invitation, tenant context, authorization filter, role management hoặc bảng booking.
+- Tiêu chí hoàn thành: slug, type/status, FK, membership unique, delete behavior và lookup index được database thực thi.
+- Kiểm thử: migration database sạch, many-to-many membership, duplicate/FK/status rejection, index và `ON DELETE RESTRICT`.
+- Ticket phụ thuộc: BF-011, BF-013, BF-022.
