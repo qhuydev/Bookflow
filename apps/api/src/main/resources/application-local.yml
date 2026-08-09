@@ -18,3 +18,8 @@ spring:
 server:
   address: ${BOOKFLOW_API_ADDRESS:127.0.0.1}
   port: ${BOOKFLOW_API_PORT:8080}
+
+bookflow:
+  authentication:
+    refresh-cookie:
+      secure: ${BOOKFLOW_AUTH_REFRESH_COOKIE_SECURE:false}

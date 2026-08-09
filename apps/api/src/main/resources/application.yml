@@ -11,6 +11,19 @@ bookflow:
         parallelism: 1
         memory-kib: 19456
         iterations: 2
+    session:
+      inactivity-days: 7
+      absolute-days: 30
+    access-token:
+      issuer: urn:bookflow:auth
+      audience: bookflow-api
+      client-id: bookflow-web
+      expires-in-seconds: 900
+    refresh-cookie:
+      name: bookflow_refresh
+      secure: ${BOOKFLOW_AUTH_REFRESH_COOKIE_SECURE:true}
+      same-site: Lax
+      path: /api/v1/auth
 
 server:
   error:

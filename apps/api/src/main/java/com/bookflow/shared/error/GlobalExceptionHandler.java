@@ -1,6 +1,8 @@
 package com.bookflow.shared.error;
 
 import com.bookflow.authentication.application.EmailAlreadyRegisteredException;
+import com.bookflow.authentication.application.InvalidCredentialsException;
+import com.bookflow.authentication.application.RefreshTokenException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -64,6 +66,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request
     ) {
         return problem(ApiErrorCode.EMAIL_ALREADY_REGISTERED, null, request, List.of());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    ResponseEntity<Object> handleInvalidCredentials(InvalidCredentialsException exception, WebRequest request) {
+        return problem(ApiErrorCode.AUTH_INVALID_CREDENTIALS, null, request, List.of());
+    }
+    @ExceptionHandler(RefreshTokenException.class)
+    ResponseEntity<Object> handleRefresh(RefreshTokenException exception, WebRequest request) {
+        ApiErrorCode code = exception.kind == RefreshTokenException.Kind.MISSING ? ApiErrorCode.AUTH_REFRESH_MISSING : exception.kind == RefreshTokenException.Kind.REUSE ? ApiErrorCode.AUTH_REFRESH_REUSE : ApiErrorCode.AUTH_REFRESH_INVALID;
+        return problem(code, null, request, List.of());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

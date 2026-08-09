@@ -24,11 +24,13 @@ Sau khi khởi động backend local bằng lệnh trên, truy cập:
 - OpenAPI JSON: `http://127.0.0.1:8080/v3/api-docs`.
 - Swagger UI: `http://127.0.0.1:8080/swagger-ui/index.html`.
 
-Metadata hiện dùng title `BookFlow API` và version `v1`. OpenAPI hiện mô tả `POST /api/v1/auth/register`; các endpoint Actuator không được đưa vào tài liệu này.
+Metadata hiện dùng title `BookFlow API` và version `v1`. OpenAPI mô tả các endpoint đăng ký, CSRF, login, refresh, logout và logout-all; các endpoint Actuator không được đưa vào tài liệu này.
 
 ## Thiết kế authentication
 
-[ADR 0001 — Authentication và refresh token](../../docs/adr/0001-authentication-and-refresh-token.md) đã chốt kiến trúc JWT access token, opaque refresh token, session rotation và browser security. [Security review](../../docs/security/authentication-security-review.md) ghi threat model và test matrix. BF-014 đã có `POST /api/v1/auth/register`: email được chuẩn hóa và password được lưu bằng Argon2id. Login, refresh, logout và Spring Security chưa tồn tại trong runtime.
+[ADR 0001 — Authentication và refresh token](../../docs/adr/0001-authentication-and-refresh-token.md) đã chốt kiến trúc JWT access token, opaque refresh token, session rotation và browser security. [Security review](../../docs/security/authentication-security-review.md) ghi threat model và test matrix. BF-014 đã có `POST /api/v1/auth/register`: email được chuẩn hóa và password được lưu bằng Argon2id.
+
+BF-015 bổ sung `GET /api/v1/auth/csrf` và `POST /api/v1/auth/login`. BF-017/018/019 hoàn thiện refresh rotation, reuse detection, logout và logout-all bằng Bearer JWT principal. Các request thay đổi trạng thái vẫn yêu cầu CSRF; refresh token gốc chỉ nằm trong cookie HttpOnly và PostgreSQL chỉ lưu SHA-256 hash. Xem [authentication local](../../docs/setup/authentication-local.md) để cấu hình PEM local ngoài repository.
 
 ## Thiết kế multi-tenancy
 
