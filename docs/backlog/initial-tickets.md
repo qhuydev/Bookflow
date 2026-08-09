@@ -220,3 +220,11 @@
 - Phạm vi: Testcontainers security regression, tài liệu authorization và bảng matrix.
 - Không nằm trong phạm vi: Redis authorization, frontend, invitation, tenant switch hoặc schema mới.
 - Tiêu chí hoàn thành: full `clean verify` pass, không cross-tenant read và tài liệu nêu rõ `401`/`403`/`404`.
+
+## BF-029 — Cập nhật cấu hình business (Hoàn thành)
+
+- Mục tiêu: cho `OWNER` hoặc `ADMIN` cập nhật từng phần cấu hình của business active.
+- Phạm vi: `PATCH /api/v1/businesses/{businessId}`, JDBC transaction, tenant authorization `BUSINESS_CONFIGURATION_MANAGE`, validation, slug unique, Flyway V5 và PostgreSQL Testcontainers.
+- Không nằm trong phạm vi: đổi status/owner/membership, branch, employee, service, invitation, frontend hoặc tenant context toàn cục.
+- Tiêu chí hoàn thành: partial update không làm mất dữ liệu cũ; `STAFF` là `403`; tenant/business/membership inactive là `404`; slug trùng là `409`; full `clean verify` pass.
+- Kiểm thử: unit validation, Testcontainers cho OWNER/ADMIN, STAFF/tenant khác/inactive, partial update, validation, JWT/CSRF và slug conflict.

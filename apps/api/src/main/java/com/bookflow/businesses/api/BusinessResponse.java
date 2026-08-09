@@ -14,6 +14,9 @@ public record BusinessResponse(
         String slug,
         String type,
         String timeZone,
+        String currencyCode,
+        String cancellationPolicy,
+        int maxBookingAdvanceDays,
         String status,
         MembershipResponse membership,
         Instant createdAt
@@ -30,6 +33,9 @@ public record BusinessResponse(
                 business.slug(),
                 business.businessType().name(),
                 business.timeZone(),
+                business.currencyCode(),
+                business.cancellationPolicy().name(),
+                business.maxBookingAdvanceDays(),
                 business.status().name(),
                 new MembershipResponse(view.membershipRole().name(), view.membershipStatus().name()),
                 business.createdAt()

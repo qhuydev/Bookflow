@@ -12,6 +12,9 @@ public record Business(
         String slug,
         BusinessType businessType,
         String timeZone,
+        String currencyCode,
+        CancellationPolicy cancellationPolicy,
+        int maxBookingAdvanceDays,
         BusinessStatus status,
         Instant createdAt,
         Instant updatedAt

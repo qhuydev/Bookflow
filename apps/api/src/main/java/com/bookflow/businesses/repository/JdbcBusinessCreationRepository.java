@@ -50,7 +50,8 @@ public class JdbcBusinessCreationRepository implements BusinessCreationRepositor
             return jdbc.queryForObject("""
                     INSERT INTO businesses (id, name, slug, business_type, time_zone, status)
                     VALUES (?, ?, ?, ?, ?, ?)
-                    RETURNING id, name, slug, business_type, time_zone, status, created_at, updated_at
+                    RETURNING id, name, slug, business_type, time_zone, currency_code, cancellation_policy,
+                              max_booking_advance_days, status, created_at, updated_at
                     """, this::mapBusiness, id, name, slug, businessType.name(), timeZone, status.name());
         } catch (DataIntegrityViolationException exception) {
             if (isBusinessSlugUniqueViolation(exception)) {
@@ -75,6 +76,9 @@ public class JdbcBusinessCreationRepository implements BusinessCreationRepositor
                 resultSet.getString("slug"),
                 BusinessType.valueOf(resultSet.getString("business_type")),
                 resultSet.getString("time_zone"),
+                resultSet.getString("currency_code"),
+                com.bookflow.businesses.domain.CancellationPolicy.valueOf(resultSet.getString("cancellation_policy")),
+                resultSet.getInt("max_booking_advance_days"),
                 BusinessStatus.valueOf(resultSet.getString("status")),
                 resultSet.getTimestamp("created_at").toInstant(),
                 resultSet.getTimestamp("updated_at").toInstant()

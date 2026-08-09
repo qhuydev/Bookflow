@@ -20,7 +20,8 @@ import java.util.UUID;
 @Profile("!test")
 public class JdbcBusinessQueryRepository implements BusinessQueryRepository {
     private static final String ACTIVE_BUSINESS_SELECT = """
-            SELECT b.id, b.name, b.slug, b.business_type, b.time_zone, b.status,
+            SELECT b.id, b.name, b.slug, b.business_type, b.time_zone, b.currency_code, b.cancellation_policy,
+                   b.max_booking_advance_days, b.status,
                    b.created_at, b.updated_at, m.role AS membership_role, m.status AS membership_status
             FROM business_memberships m
             JOIN businesses b ON b.id = m.tenant_id
@@ -63,6 +64,9 @@ public class JdbcBusinessQueryRepository implements BusinessQueryRepository {
                 resultSet.getString("slug"),
                 BusinessType.valueOf(resultSet.getString("business_type")),
                 resultSet.getString("time_zone"),
+                resultSet.getString("currency_code"),
+                com.bookflow.businesses.domain.CancellationPolicy.valueOf(resultSet.getString("cancellation_policy")),
+                resultSet.getInt("max_booking_advance_days"),
                 BusinessStatus.valueOf(resultSet.getString("status")),
                 resultSet.getTimestamp("created_at").toInstant(),
                 resultSet.getTimestamp("updated_at").toInstant()

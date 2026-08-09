@@ -4,6 +4,7 @@ import com.bookflow.businesses.domain.Business;
 import com.bookflow.businesses.domain.BusinessMembershipView;
 import com.bookflow.businesses.domain.BusinessStatus;
 import com.bookflow.businesses.domain.BusinessType;
+import com.bookflow.businesses.domain.CancellationPolicy;
 import com.bookflow.businesses.domain.MembershipRole;
 import com.bookflow.businesses.domain.MembershipStatus;
 import com.bookflow.businesses.repository.BusinessQueryRepository;
@@ -61,6 +62,6 @@ class TenantAuthorizationServiceTest {
     private BusinessMembershipView view(MembershipRole role) {
         Instant now = Instant.now();
         return new BusinessMembershipView(new Business(UUID.randomUUID(), "Name", "name", BusinessType.SALON,
-                "UTC", BusinessStatus.ACTIVE, now, now), role, MembershipStatus.ACTIVE);
+                "UTC", "VND", CancellationPolicy.FLEXIBLE, 90, BusinessStatus.ACTIVE, now, now), role, MembershipStatus.ACTIVE);
     }
 }

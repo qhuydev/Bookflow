@@ -2,6 +2,7 @@ package com.bookflow.businesses.api;
 
 import com.bookflow.businesses.application.BusinessCreationService;
 import com.bookflow.businesses.application.BusinessQueryService;
+import com.bookflow.businesses.application.BusinessConfigurationService;
 import com.bookflow.businesses.application.CurrentBusinessUserUnavailableException;
 import com.bookflow.businesses.domain.Business;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +18,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,10 +37,13 @@ public class BusinessController {
 
     private final BusinessCreationService businessCreationService;
     private final BusinessQueryService businessQueryService;
+    private final BusinessConfigurationService businessConfigurationService;
 
-    public BusinessController(BusinessCreationService businessCreationService, BusinessQueryService businessQueryService) {
+    public BusinessController(BusinessCreationService businessCreationService, BusinessQueryService businessQueryService,
+                              BusinessConfigurationService businessConfigurationService) {
         this.businessCreationService = businessCreationService;
         this.businessQueryService = businessQueryService;
+        this.businessConfigurationService = businessConfigurationService;
     }
 
     @GetMapping
@@ -63,6 +68,21 @@ public class BusinessController {
     })
     public BusinessResponse getBusiness(@PathVariable UUID businessId, Authentication authentication) {
         return BusinessResponse.from(businessQueryService.getForCurrentUser(currentUserId(authentication), businessId));
+    }
+
+    @PatchMapping("/{businessId}")
+    @Operation(summary = "Cập nhật một phần cấu hình business")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Business configuration updated", content = @Content(schema = @Schema(implementation = BusinessResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid update request or business ID", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "401", description = "Authentication required", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "403", description = "CSRF missing or membership role is insufficient", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "404", description = "Business is not visible", content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
+            @ApiResponse(responseCode = "409", description = "Business slug already exists", content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
+    })
+    public BusinessResponse updateBusiness(@PathVariable UUID businessId, @RequestBody UpdateBusinessRequest request,
+                                           Authentication authentication) {
+        return BusinessResponse.from(businessConfigurationService.update(currentUserId(authentication), businessId, request));
     }
 
     @PostMapping
