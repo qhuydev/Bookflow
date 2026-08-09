@@ -60,7 +60,7 @@ tests/      # Tài nguyên kiểm thử dùng chung trong tương lai
 
 ## Trạng thái hiện tại
 
-Dự án đã có nền xác thực và schema tenant: đăng ký, JWT RS256, session/refresh rotation, khôi phục mật khẩu, Redis rate limiting, `businesses` và business membership. PostgreSQL vẫn là nguồn sự thật; authorization runtime, tenant context và schema booking chưa được triển khai.
+Dự án đã có nền xác thực và schema tenant: đăng ký, JWT RS256, session/refresh rotation, khôi phục mật khẩu, Redis rate limiting và API tạo business với OWNER membership đầu tiên. PostgreSQL vẫn là nguồn sự thật; authorization runtime theo tenant, quản lý membership và schema booking chưa được triển khai.
 
 ```text
 BF-001: Completed
@@ -82,6 +82,7 @@ BF-020: Completed — forgot/reset password
 BF-021: Completed — Redis rate limiting và security hardening
 BF-022: Completed — authentication final audit
 BF-023: Completed — business và business membership database schema
+BF-024: Completed — Create Business API và owner membership
 ```
 
 ## CI GitHub Actions
@@ -137,9 +138,9 @@ $env:SPRING_PROFILES_ACTIVE = "local"
 
 Health URL: `http://127.0.0.1:8080/actuator/health`.
 
-Khi backend đang chạy, OpenAPI JSON có tại `http://127.0.0.1:8080/v3/api-docs` và Swagger UI có tại `http://127.0.0.1:8080/swagger-ui/index.html`. Hiện có contract authentication; các API quản lý business và nghiệp vụ khác chưa được triển khai.
+Khi backend đang chạy, OpenAPI JSON có tại `http://127.0.0.1:8080/v3/api-docs` và Swagger UI có tại `http://127.0.0.1:8080/swagger-ui/index.html`. Hiện có contract authentication và API tạo business; các API quản lý business khác chưa được triển khai.
 
-Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [schema business/membership](docs/setup/business-membership-schema.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md), [chuẩn lỗi API](docs/standards/api-errors.md), [ADR authentication](docs/adr/0001-authentication-and-refresh-token.md), [ADR multi-tenancy](docs/adr/0002-multi-tenancy-and-membership.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, tenant context runtime, authorization hoặc booking API.
+Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [schema business/membership](docs/setup/business-membership-schema.md), [API tạo business](docs/setup/business-creation-api.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md), [chuẩn lỗi API](docs/standards/api-errors.md), [ADR authentication](docs/adr/0001-authentication-and-refresh-token.md), [ADR multi-tenancy](docs/adr/0002-multi-tenancy-and-membership.md) và [README của backend](apps/api/README.md). Backend chưa có JPA, tenant context runtime, authorization theo role hoặc booking API.
 
 ## Frontend quick start
 

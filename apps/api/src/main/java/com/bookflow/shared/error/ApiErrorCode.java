@@ -29,11 +29,23 @@ public enum ApiErrorCode {
             "Email already registered",
             "An account with this email already exists."
     ),
+    BUSINESS_SLUG_ALREADY_EXISTS(
+            HttpStatus.CONFLICT,
+            "business-slug-already-exists",
+            "Business slug already exists",
+            "A business with this slug already exists."
+    ),
     AUTH_INVALID_CREDENTIALS(
             HttpStatus.UNAUTHORIZED,
             "auth-invalid-credentials",
             "Authentication failed",
             "Invalid email or password."
+    ),
+    AUTH_CURRENT_USER_UNAVAILABLE(
+            HttpStatus.UNAUTHORIZED,
+            "auth-current-user-unavailable",
+            "Authentication failed",
+            "The authenticated user is not available."
     ),
     AUTH_REFRESH_INVALID(HttpStatus.UNAUTHORIZED, "auth-refresh-invalid", "Refresh failed", "The refresh session is not valid."),
     AUTH_REFRESH_MISSING(HttpStatus.UNAUTHORIZED, "auth-refresh-missing", "Refresh failed", "A refresh session is required."),

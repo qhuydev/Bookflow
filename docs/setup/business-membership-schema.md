@@ -1,6 +1,6 @@
-# Business và Business Membership schema (BF-023)
+# Business và Business Membership schema (BF-023/BF-024)
 
-BF-023 tạo nền dữ liệu PostgreSQL cho business tenant và membership của user global. Ticket này chưa có API, invitation, Spring Security authorization, tenant context runtime hoặc bảng nghiệp vụ như branch/booking.
+BF-023 tạo nền dữ liệu PostgreSQL cho business tenant và membership của user global. BF-024 dùng schema này cho API tạo business và membership `OWNER/ACTIVE` ban đầu trong cùng một transaction. Chưa có invitation, Spring Security authorization theo role, tenant context runtime hoặc bảng nghiệp vụ như branch/booking.
 
 ## Business là tenant
 
@@ -30,6 +30,6 @@ Tất cả FK từ membership đến business/user dùng `ON DELETE RESTRICT`. X
 
 ## Invariant để lại cho ticket sau
 
-Database hiện không ép “mỗi business luôn có ít nhất một OWNER”, vì đây là invariant nhiều hàng không nên giải bằng trigger phức tạp trong BF-023. Ticket quản lý membership/authorization sau này phải dùng transaction, locking và policy role để tạo business, chuyển owner, hạ quyền và revoke mà không tạo tenant không có OWNER.
+Database hiện không ép “mỗi business luôn có ít nhất một OWNER”, vì đây là invariant nhiều hàng không nên giải bằng trigger phức tạp trong BF-023. BF-024 tạo business và OWNER membership trong một transaction để giữ invariant ban đầu. Ticket quản lý membership/authorization sau này phải tiếp tục dùng transaction, locking và policy role khi chuyển owner, hạ quyền hoặc revoke.
 
 Khi bảng nghiệp vụ được thêm, chúng phải có `tenant_id NOT NULL`, FK tới `businesses(id)` và các composite FK theo ADR 0002 để chặn liên kết chéo tenant.

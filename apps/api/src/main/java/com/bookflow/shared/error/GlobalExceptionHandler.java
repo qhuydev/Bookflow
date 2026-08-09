@@ -4,6 +4,8 @@ import com.bookflow.authentication.application.EmailAlreadyRegisteredException;
 import com.bookflow.authentication.application.InvalidCredentialsException;
 import com.bookflow.authentication.application.InvalidPasswordResetTokenException;
 import com.bookflow.authentication.application.RefreshTokenException;
+import com.bookflow.businesses.application.BusinessSlugAlreadyExistsException;
+import com.bookflow.businesses.application.CurrentBusinessUserUnavailableException;
 import com.bookflow.authentication.ratelimit.RateLimitExceededException;
 import com.bookflow.authentication.ratelimit.RateLimitUnavailableException;
 import jakarta.validation.ConstraintViolation;
@@ -69,6 +71,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request
     ) {
         return problem(ApiErrorCode.EMAIL_ALREADY_REGISTERED, null, request, List.of());
+    }
+
+    @ExceptionHandler(BusinessSlugAlreadyExistsException.class)
+    ResponseEntity<Object> handleBusinessSlugAlreadyExists(
+            BusinessSlugAlreadyExistsException exception,
+            WebRequest request
+    ) {
+        return problem(ApiErrorCode.BUSINESS_SLUG_ALREADY_EXISTS, null, request, List.of());
+    }
+
+    @ExceptionHandler(CurrentBusinessUserUnavailableException.class)
+    ResponseEntity<Object> handleCurrentBusinessUserUnavailable(
+            CurrentBusinessUserUnavailableException exception,
+            WebRequest request
+    ) {
+        return problem(ApiErrorCode.AUTH_CURRENT_USER_UNAVAILABLE, null, request, List.of());
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)

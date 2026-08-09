@@ -182,4 +182,12 @@
 - Không nằm trong phạm vi: API, invitation, tenant context, authorization filter, role management hoặc bảng booking.
 - Tiêu chí hoàn thành: slug, type/status, FK, membership unique, delete behavior và lookup index được database thực thi.
 - Kiểm thử: migration database sạch, many-to-many membership, duplicate/FK/status rejection, index và `ON DELETE RESTRICT`.
+
+## BF-024 — Create Business API & Owner Membership (Hoàn thành)
+
+- Mục tiêu: người dùng đã xác thực tạo business và membership `OWNER/ACTIVE` ban đầu trong cùng transaction.
+- Phạm vi: JWT/CSRF cho `POST /api/v1/businesses`, validation, JDBC transaction, map slug unique sang `409` và Testcontainers integration test.
+- Không nằm trong phạm vi: quản lý membership, invitation, chuyển owner, tenant context nghiệp vụ hoặc authorization theo role.
+- Tiêu chí hoàn thành: business và owner membership cùng commit/rollback, slug cạnh tranh chỉ một `201`, tenant ID khớp business ID và full `clean verify` pass.
+- Kiểm thử: JWT/CSRF, validation, persistence, rollback PostgreSQL, unique/concurrency và regression authentication/migration.
 - Ticket phụ thuộc: BF-011, BF-013, BF-022.
