@@ -1,6 +1,7 @@
 package com.bookflow.businesses.api;
 
 import com.bookflow.businesses.domain.Business;
+import com.bookflow.businesses.domain.BusinessMembershipView;
 import com.bookflow.businesses.domain.MembershipRole;
 import com.bookflow.businesses.domain.MembershipStatus;
 
@@ -18,6 +19,11 @@ public record BusinessResponse(
         Instant createdAt
 ) {
     public static BusinessResponse ownerBusiness(Business business) {
+        return from(new BusinessMembershipView(business, MembershipRole.OWNER, MembershipStatus.ACTIVE));
+    }
+
+    public static BusinessResponse from(BusinessMembershipView view) {
+        Business business = view.business();
         return new BusinessResponse(
                 business.id(),
                 business.name(),
@@ -25,7 +31,7 @@ public record BusinessResponse(
                 business.businessType().name(),
                 business.timeZone(),
                 business.status().name(),
-                new MembershipResponse(MembershipRole.OWNER.name(), MembershipStatus.ACTIVE.name()),
+                new MembershipResponse(view.membershipRole().name(), view.membershipStatus().name()),
                 business.createdAt()
         );
     }

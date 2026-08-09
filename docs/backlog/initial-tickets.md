@@ -190,4 +190,12 @@
 - Không nằm trong phạm vi: quản lý membership, invitation, chuyển owner, tenant context nghiệp vụ hoặc authorization theo role.
 - Tiêu chí hoàn thành: business và owner membership cùng commit/rollback, slug cạnh tranh chỉ một `201`, tenant ID khớp business ID và full `clean verify` pass.
 - Kiểm thử: JWT/CSRF, validation, persistence, rollback PostgreSQL, unique/concurrency và regression authentication/migration.
+
+## BF-025 — Xem business của user hiện tại (Hoàn thành)
+
+- Mục tiêu: cho user đã xác thực xem các business active mà họ có membership active.
+- Phạm vi: `GET /api/v1/businesses`, `GET /api/v1/businesses/{businessId}`, JDBC tenant filtering, response membership hiện tại và Testcontainers.
+- Không nằm trong phạm vi: pagination, update/delete business, membership management, tenant context toàn cục và authorization theo role.
+- Tiêu chí hoàn thành: không đọc chéo tenant, inactive business/membership bị ẩn, UUID sai là `400`, access không hợp lệ/không thuộc user là `404` trung tính và full `clean verify` pass.
+- Kiểm thử: unit service, PostgreSQL Testcontainers cho isolation/status/empty list, JWT/UUID error và regression BF-023/BF-024/authentication.
 - Ticket phụ thuộc: BF-011, BF-013, BF-022.
