@@ -24,7 +24,9 @@ public class TenantAuthorizationService {
             TenantPermission.MEMBERSHIP_PRIVILEGED_MANAGE, EnumSet.of(MembershipRole.OWNER),
             TenantPermission.BUSINESS_CLOSE, EnumSet.of(MembershipRole.OWNER),
             TenantPermission.BRANCH_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.STAFF),
-            TenantPermission.BRANCH_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN)
+            TenantPermission.BRANCH_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN),
+            TenantPermission.EMPLOYEE_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.STAFF),
+            TenantPermission.EMPLOYEE_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN)
     );
 
     private final BusinessQueryRepository repository;

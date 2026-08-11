@@ -1,0 +1,4 @@
+package com.bookflow.employees.api;
+import com.fasterxml.jackson.annotation.JsonAnySetter; import java.util.*;
+public final class CreateEmployeeRequest { private String code,fullName,phone,email,bio; private final Set<String> unknown=new LinkedHashSet<>();
+ public String getCode(){return code;} public void setCode(String v){code=v;} public String getFullName(){return fullName;} public void setFullName(String v){fullName=v;} public String getPhone(){return phone;} public void setPhone(String v){phone=v;} public String getEmail(){return email;} public void setEmail(String v){email=v;} public String getBio(){return bio;} public void setBio(String v){bio=v;} public Set<String> unknownFields(){return Set.copyOf(unknown);} @JsonAnySetter void unknown(String n,Object v){unknown.add(n);} }

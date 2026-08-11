@@ -41,6 +41,12 @@ public enum ApiErrorCode {
             "Branch code already exists",
             "A branch with this code already exists in this business."
     ),
+    EMPLOYEE_CODE_ALREADY_EXISTS(
+            HttpStatus.CONFLICT,
+            "employee-code-already-exists",
+            "Employee code already exists",
+            "An employee with this code already exists in this business."
+    ),
     AUTH_INVALID_CREDENTIALS(
             HttpStatus.UNAUTHORIZED,
             "auth-invalid-credentials",

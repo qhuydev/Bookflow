@@ -1,0 +1,3 @@
+package com.bookflow.employees.repository;
+import com.bookflow.employees.application.EmployeeRequestValidator.Values; import com.bookflow.employees.domain.Employee; import java.util.*;
+public interface EmployeeRepository { Optional<Employee> create(UUID tenant,UUID user,Values v); List<Employee> active(UUID tenant); Optional<Employee> active(UUID tenant,UUID employee); Optional<Employee> update(UUID tenant,UUID employee,UUID user,Values v); boolean archive(UUID tenant,UUID employee,UUID user); boolean exists(UUID tenant,UUID employee); boolean assign(UUID tenant,UUID employee,UUID branch,UUID user); boolean activePair(UUID tenant,UUID employee,UUID branch); void unassign(UUID tenant,UUID employee,UUID branch,UUID user); List<UUID> branchIds(UUID tenant,UUID employee); }

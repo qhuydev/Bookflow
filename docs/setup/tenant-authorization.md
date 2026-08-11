@@ -16,6 +16,8 @@ BookFlow xác thực JWT trước, rồi phân quyền tenant bằng trạng th�
 | `BUSINESS_CONFIGURATION_MANAGE` | Có | Có | Không |
 | `BRANCH_VIEW` | Có | Có | Có |
 | `BRANCH_MANAGE` | Có | Có | Không |
+| `EMPLOYEE_VIEW` | Có | Có | Có |
+| `EMPLOYEE_MANAGE` | Có | Có | Không |
 | `MEMBERSHIP_STAFF_MANAGE` | Có | Có | Không |
 | `MEMBERSHIP_PRIVILEGED_MANAGE` | Có | Không | Không |
 | `BUSINESS_CLOSE` | Có | Không | Không |

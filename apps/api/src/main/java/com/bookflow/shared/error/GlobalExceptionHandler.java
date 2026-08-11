@@ -8,6 +8,7 @@ import com.bookflow.businesses.application.BusinessSlugAlreadyExistsException;
 import com.bookflow.businesses.application.CurrentBusinessUserUnavailableException;
 import com.bookflow.businesses.authorization.TenantPermissionDeniedException;
 import com.bookflow.branches.application.BranchCodeAlreadyExistsException;
+import com.bookflow.employees.application.EmployeeCodeAlreadyExistsException;
 import com.bookflow.authentication.ratelimit.RateLimitExceededException;
 import com.bookflow.authentication.ratelimit.RateLimitUnavailableException;
 import jakarta.validation.ConstraintViolation;
@@ -86,6 +87,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BranchCodeAlreadyExistsException.class)
     ResponseEntity<Object> handleBranchCodeAlreadyExists(BranchCodeAlreadyExistsException exception, WebRequest request) {
         return problem(ApiErrorCode.BRANCH_CODE_ALREADY_EXISTS, null, request, List.of());
+    }
+
+    @ExceptionHandler(EmployeeCodeAlreadyExistsException.class)
+    ResponseEntity<Object> handleEmployeeCodeAlreadyExists(EmployeeCodeAlreadyExistsException exception, WebRequest request) {
+        return problem(ApiErrorCode.EMPLOYEE_CODE_ALREADY_EXISTS, null, request, List.of());
     }
 
     @ExceptionHandler(CurrentBusinessUserUnavailableException.class)
