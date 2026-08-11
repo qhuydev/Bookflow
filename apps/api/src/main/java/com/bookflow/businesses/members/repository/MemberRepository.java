@@ -1,0 +1,3 @@
+package com.bookflow.businesses.members.repository;
+import com.bookflow.businesses.members.api.MemberResponse; import java.util.*;
+public interface MemberRepository { List<MemberResponse> list(UUID tenant); Optional<MemberResponse> byId(UUID tenant,UUID id); Optional<UUID> userByEmail(String email); boolean activeEmployee(UUID tenant,UUID id); MemberResponse invite(UUID tenant,UUID user,String role,UUID employee); MemberResponse role(UUID tenant,UUID id,String role); boolean revoke(UUID tenant,UUID id,UUID by); boolean link(UUID tenant,UUID member,UUID employee); void unlink(UUID tenant,UUID member); }

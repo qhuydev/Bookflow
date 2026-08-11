@@ -9,6 +9,7 @@ import com.bookflow.businesses.application.CurrentBusinessUserUnavailableExcepti
 import com.bookflow.businesses.authorization.TenantPermissionDeniedException;
 import com.bookflow.branches.application.BranchCodeAlreadyExistsException;
 import com.bookflow.employees.application.EmployeeCodeAlreadyExistsException;
+import com.bookflow.businesses.members.application.MemberConflictException;
 import com.bookflow.authentication.ratelimit.RateLimitExceededException;
 import com.bookflow.authentication.ratelimit.RateLimitUnavailableException;
 import jakarta.validation.ConstraintViolation;
@@ -93,6 +94,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<Object> handleEmployeeCodeAlreadyExists(EmployeeCodeAlreadyExistsException exception, WebRequest request) {
         return problem(ApiErrorCode.EMPLOYEE_CODE_ALREADY_EXISTS, null, request, List.of());
     }
+    @ExceptionHandler(MemberConflictException.class)
+    ResponseEntity<Object> handleMemberConflict(MemberConflictException exception, WebRequest request) { return problem(ApiErrorCode.MEMBER_CONFLICT, null, request, List.of()); }
 
     @ExceptionHandler(CurrentBusinessUserUnavailableException.class)
     ResponseEntity<Object> handleCurrentBusinessUserUnavailable(

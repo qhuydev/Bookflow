@@ -47,6 +47,7 @@ public enum ApiErrorCode {
             "Employee code already exists",
             "An employee with this code already exists in this business."
     ),
+    MEMBER_CONFLICT(HttpStatus.CONFLICT, "member-conflict", "Membership conflict", "The membership operation conflicts with current data."),
     AUTH_INVALID_CREDENTIALS(
             HttpStatus.UNAUTHORIZED,
             "auth-invalid-credentials",

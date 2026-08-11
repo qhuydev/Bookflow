@@ -17,16 +17,18 @@ import java.util.UUID;
 @Service
 @Profile("!test")
 public class TenantAuthorizationService {
-    private static final Map<TenantPermission, EnumSet<MembershipRole>> PERMISSIONS = Map.of(
-            TenantPermission.BUSINESS_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.STAFF),
-            TenantPermission.BUSINESS_CONFIGURATION_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN),
-            TenantPermission.MEMBERSHIP_STAFF_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN),
-            TenantPermission.MEMBERSHIP_PRIVILEGED_MANAGE, EnumSet.of(MembershipRole.OWNER),
-            TenantPermission.BUSINESS_CLOSE, EnumSet.of(MembershipRole.OWNER),
-            TenantPermission.BRANCH_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.STAFF),
-            TenantPermission.BRANCH_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN),
-            TenantPermission.EMPLOYEE_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.STAFF),
-            TenantPermission.EMPLOYEE_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN)
+    private static final Map<TenantPermission, EnumSet<MembershipRole>> PERMISSIONS = Map.ofEntries(
+            Map.entry(TenantPermission.BUSINESS_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.STAFF)),
+            Map.entry(TenantPermission.BUSINESS_CONFIGURATION_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN)),
+            Map.entry(TenantPermission.MEMBERSHIP_STAFF_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN)),
+            Map.entry(TenantPermission.MEMBERSHIP_PRIVILEGED_MANAGE, EnumSet.of(MembershipRole.OWNER)),
+            Map.entry(TenantPermission.BUSINESS_CLOSE, EnumSet.of(MembershipRole.OWNER)),
+            Map.entry(TenantPermission.BRANCH_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.STAFF)),
+            Map.entry(TenantPermission.BRANCH_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN)),
+            Map.entry(TenantPermission.EMPLOYEE_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.STAFF)),
+            Map.entry(TenantPermission.EMPLOYEE_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN)),
+            Map.entry(TenantPermission.MEMBER_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN)),
+            Map.entry(TenantPermission.MEMBER_MANAGE, EnumSet.of(MembershipRole.OWNER))
     );
 
     private final BusinessQueryRepository repository;
