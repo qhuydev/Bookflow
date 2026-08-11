@@ -2,6 +2,10 @@ package com.bookflow.shared.config;
 
 import com.bookflow.BookFlowApplication;
 import com.jayway.jsonpath.JsonPath;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Paths;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +56,9 @@ class OpenApiDocumentationTest {
                 .andExpect(jsonPath("$.info.title").value("BookFlow API"))
                 .andExpect(jsonPath("$.info.version").value("v1"))
                 .andExpect(jsonPath("$.info.description").value(DESCRIPTION))
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.type").value("http"))
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.bearerFormat").value("JWT"))
                 .andExpect(jsonPath("$.paths").isMap())
                 .andReturn();
 
@@ -85,6 +92,23 @@ class OpenApiDocumentationTest {
                 .andReturn();
 
         assertThat(responseBody(initializer)).contains("/v3/api-docs");
+    }
+
+    @Test
+    void documentsCsrfHeaderForUnsafeOperationsExceptRegistration() {
+        OpenAPI openApi = new OpenAPI().paths(new Paths()
+                .addPathItem("/api/v1/businesses", new PathItem().post(new Operation()))
+                .addPathItem("/api/v1/auth/register", new PathItem().post(new Operation())));
+
+        new OpenApiConfiguration().csrfHeaderForUnsafeOperations().customise(openApi);
+
+        assertThat(openApi.getPaths().get("/api/v1/businesses").getPost().getParameters())
+                .anySatisfy(parameter -> {
+                    assertThat(parameter.getName()).isEqualTo("X-XSRF-TOKEN");
+                    assertThat(parameter.getIn()).isEqualTo("header");
+                    assertThat(parameter.getRequired()).isTrue();
+                });
+        assertThat(openApi.getPaths().get("/api/v1/auth/register").getPost().getParameters()).isNull();
     }
 
     private String responseBody(MvcResult result) {

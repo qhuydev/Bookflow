@@ -35,9 +35,7 @@ class AuthenticationSecurityConfiguration {
                             }
                         }))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.GET, "/api/v1/businesses", "/api/v1/businesses/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/businesses").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/businesses/**").authenticated()
+                        .requestMatchers("/api/v1/businesses/**").authenticated()
                         .requestMatchers("/api/v1/auth/logout-all").authenticated()
                         .anyRequest().permitAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

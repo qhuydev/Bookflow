@@ -26,6 +26,8 @@ Sau khi khởi động backend local bằng lệnh trên, truy cập:
 
 Metadata hiện dùng title `BookFlow API` và version `v1`. OpenAPI mô tả các endpoint đăng ký, CSRF, login, refresh, logout/logout-all và forgot/reset password; các endpoint Actuator không được đưa vào tài liệu này.
 
+Swagger UI có nút **Authorize** cho Bearer JWT. Sau login, dán riêng giá trị `accessToken` (không có tiền tố `Bearer`) vào nút này. Với mọi `POST`/`PATCH`/`DELETE` ngoài đăng ký, gọi `GET /api/v1/auth/csrf` trước rồi dán trường `token` vào header `X-XSRF-TOKEN` hiện trong endpoint; browser giữ cookie CSRF cùng phiên.
+
 ## Thiết kế authentication
 
 [ADR 0001 — Authentication và refresh token](../../docs/adr/0001-authentication-and-refresh-token.md) đã chốt kiến trúc JWT access token, opaque refresh token, session rotation và browser security. [Security review](../../docs/security/authentication-security-review.md) ghi threat model và test matrix. BF-014 đã có `POST /api/v1/auth/register`: email được chuẩn hóa và password được lưu bằng Argon2id.

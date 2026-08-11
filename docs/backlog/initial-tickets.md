@@ -228,3 +228,10 @@
 - Không nằm trong phạm vi: đổi status/owner/membership, branch, employee, service, invitation, frontend hoặc tenant context toàn cục.
 - Tiêu chí hoàn thành: partial update không làm mất dữ liệu cũ; `STAFF` là `403`; tenant/business/membership inactive là `404`; slug trùng là `409`; full `clean verify` pass.
 - Kiểm thử: unit validation, Testcontainers cho OWNER/ADMIN, STAFF/tenant khác/inactive, partial update, validation, JWT/CSRF và slug conflict.
+
+## BF-030 — Schema và CRUD/archive chi nhánh (Đang thực hiện)
+
+- Mục tiêu: tạo và quản lý branch business bằng JDBC, soft archive và tenant authorization.
+- Phạm vi: Flyway V6, endpoint branch CRUD/archive, `BRANCH_VIEW`/`BRANCH_MANAGE`, validation và PostgreSQL Testcontainers.
+- Không nằm trong phạm vi: employee, service, lịch, booking, public API, Redis, frontend và khôi phục branch archive.
+- Tiêu chí hoàn thành: unique code theo tenant, archive không hard delete, isolation và CSRF/JWT đúng, full `clean verify` pass.

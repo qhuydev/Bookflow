@@ -35,6 +35,12 @@ public enum ApiErrorCode {
             "Business slug already exists",
             "A business with this slug already exists."
     ),
+    BRANCH_CODE_ALREADY_EXISTS(
+            HttpStatus.CONFLICT,
+            "branch-code-already-exists",
+            "Branch code already exists",
+            "A branch with this code already exists in this business."
+    ),
     AUTH_INVALID_CREDENTIALS(
             HttpStatus.UNAUTHORIZED,
             "auth-invalid-credentials",
