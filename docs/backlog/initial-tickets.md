@@ -235,3 +235,44 @@
 - Phạm vi: Flyway V6, endpoint branch CRUD/archive, `BRANCH_VIEW`/`BRANCH_MANAGE`, validation và PostgreSQL Testcontainers.
 - Không nằm trong phạm vi: employee, service, lịch, booking, public API, Redis, frontend và khôi phục branch archive.
 - Tiêu chí hoàn thành: unique code theo tenant, archive không hard delete, isolation và CSRF/JWT đúng, full `clean verify` pass.
+
+---
+
+## Cập nhật trạng thái hiện tại — Giai đoạn business catalog
+
+Các ticket dưới đây phản ánh đúng worktree hiện tại. Chưa ticket nào trong nhóm này được đánh dấu hoàn thành vì chưa chạy lại toàn bộ `clean verify` sau khi các thay đổi chưa commit được ghép chung.
+
+## BF-030 — Schema và CRUD/archive chi nhánh (In progress)
+
+- Đã có Flyway V6, module Branch CRUD/archive, JWT/CSRF và tenant authorization.
+- Còn cần xác minh lại full regression cùng các migration V7–V9 trước khi chuyển Completed.
+
+## BF-031 — Employee CRUD + archive (In progress)
+
+- Đã có Flyway V7, module Employee, archive mềm, code unique theo tenant và permission Employee.
+- Còn cần full regression chung trước khi chuyển Completed.
+
+## BF-032 — Business member và liên kết user–employee (In progress)
+
+- Flyway V8 đã bổ sung `employees.user_id`, FK tới `users` và unique `(tenant_id, user_id)`.
+- API quản lý member, role và liên kết employee chưa được xác minh hoàn chỉnh bằng test trong worktree hiện tại.
+
+## BF-033 — Gán Employee vào nhiều Branch (In progress)
+
+- Đã có bảng assignment tenant-scoped trong V7 và API gán/bỏ gán employee–branch.
+- Còn cần full regression chung trước khi chuyển Completed.
+
+## BF-034 — Service CRUD + archive (In progress)
+
+- Flyway V9 và module Service catalog/soft archive đã được thêm.
+- Còn thiếu kiểm thử và xác minh đầy đủ theo acceptance criteria.
+
+## BF-035 — Gán Service cho Branch và Employee (In progress)
+
+- V9 có `branch_services`, `employee_services`, composite FK tenant và rule branch active chung cho employee-service.
+- Còn thiếu kiểm thử và xác minh đầy đủ theo acceptance criteria.
+
+## BF-036 — Public Catalog API theo business slug (In progress)
+
+- Đã có public endpoint theo slug, module controller/service/repository, OpenAPI, tài liệu và unit test boundary/privacy.
+- Chưa chạy Testcontainers integration test và `clean verify`; chưa được đánh dấu Completed.
