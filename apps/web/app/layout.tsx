@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { Noto_Sans, Noto_Serif } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { Providers } from './providers'
 
 const notoSans = Noto_Sans({ subsets: ['latin', 'vietnamese'], variable: '--font-noto-sans' })
 const notoSerif = Noto_Serif({ subsets: ['latin', 'vietnamese'], variable: '--font-noto-serif' })
@@ -42,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="vi" className="bg-background">
       <body className={`${notoSans.variable} ${notoSerif.variable} antialiased`}>
-        {children}
+        <Providers>{children}</Providers>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

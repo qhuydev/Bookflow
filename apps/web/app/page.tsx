@@ -1,5 +1,5 @@
-import BookFlowApp from '@/components/bookflow-app'
+import { redirect } from 'next/navigation'
 
 export default function Page() {
-  return <BookFlowApp />
+  redirect('/an-nhien-wellness')
 }
