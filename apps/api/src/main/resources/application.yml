@@ -24,6 +24,8 @@ bookflow:
       secure: ${BOOKFLOW_AUTH_REFRESH_COOKIE_SECURE:true}
       same-site: Lax
       path: /api/v1/auth
+    cors:
+      allowed-origins: ${BOOKFLOW_CORS_ALLOWED_ORIGINS:}
     password-reset:
       ttl-minutes: ${BOOKFLOW_AUTH_PASSWORD_RESET_TTL_MINUTES:30}
     rate-limit:
