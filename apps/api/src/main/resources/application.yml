@@ -3,6 +3,11 @@ spring:
     name: bookflow-api
 
 bookflow:
+  booking:
+    hold-minutes: ${BOOKFLOW_BOOKING_HOLD_MINUTES:10}
+  availability:
+    slot-step-minutes: ${BOOKFLOW_AVAILABILITY_SLOT_STEP_MINUTES:15}
+    default-lead-time-minutes: ${BOOKFLOW_AVAILABILITY_DEFAULT_LEAD_TIME_MINUTES:0}
   authentication:
     password:
       argon2:

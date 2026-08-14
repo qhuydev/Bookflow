@@ -7,4 +7,14 @@ export type PublicBusiness = { slug: string; name: string; timeZone: string; cur
 export type PublicBranch = { id: string; code: string; name: string; addressLine1?: string; city?: string; timeZone: string }
 export type PublicService = { id: string; name: string; description?: string; price: number; currency: string; durationMinutes: number; bufferBeforeMinutes: number; bufferAfterMinutes: number }
 export type PublicEmployee = { id: string; fullName: string; bio?: string }
+export type Weekday = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
+export type ScheduleExceptionType = 'TIME_OFF' | 'WORKING_OVERRIDE'
+export type WorkingScheduleRule = { id: string; businessId: string; branchId: string; employeeId: string; weekday: Weekday; startLocalTime: string; endLocalTime: string; effectiveFrom: string; effectiveTo: string | null; createdAt: string; updatedAt: string }
+export type ScheduleBreak = { id: string; businessId: string; scheduleRuleId: string; startLocalTime: string; endLocalTime: string; createdAt: string; updatedAt: string }
+export type ScheduleException = { id: string; businessId: string; branchId: string; employeeId: string; date: string; type: ScheduleExceptionType; startLocalTime: string | null; endLocalTime: string | null; note: string | null; createdAt: string; updatedAt: string }
+export type WorkingRuleInput = { branchId: string; weekday: Weekday; startLocalTime: string; endLocalTime: string; effectiveFrom: string; effectiveTo?: string | null }
+export type ScheduleBreakInput = { startLocalTime: string; endLocalTime: string }
+export type ScheduleExceptionInput = { branchId: string; date: string; type: ScheduleExceptionType; startLocalTime?: string | null; endLocalTime?: string | null; note?: string | null }
+export type AvailabilitySlot = { start: string; end: string; employeeIds: string[] }
+export type PublicAvailabilityResponse = { date: string; timeZone: string; branchId: string; serviceId: string; slots: AvailabilitySlot[] }
 export type ProtectedRequest = <T>(path: string, init?: RequestInit) => Promise<T>

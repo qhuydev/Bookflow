@@ -9,9 +9,12 @@ import com.bookflow.businesses.application.CurrentBusinessUserUnavailableExcepti
 import com.bookflow.businesses.authorization.TenantPermissionDeniedException;
 import com.bookflow.branches.application.BranchCodeAlreadyExistsException;
 import com.bookflow.employees.application.EmployeeCodeAlreadyExistsException;
+import com.bookflow.schedules.application.ScheduleConflictException;
 import com.bookflow.businesses.members.application.MemberConflictException;
 import com.bookflow.authentication.ratelimit.RateLimitExceededException;
 import com.bookflow.authentication.ratelimit.RateLimitUnavailableException;
+import com.bookflow.bookings.application.IdempotencyKeyReusedException;
+import com.bookflow.bookings.application.SlotUnavailableException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -96,6 +99,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
     @ExceptionHandler(MemberConflictException.class)
     ResponseEntity<Object> handleMemberConflict(MemberConflictException exception, WebRequest request) { return problem(ApiErrorCode.MEMBER_CONFLICT, null, request, List.of()); }
+
+    @ExceptionHandler(ScheduleConflictException.class)
+    ResponseEntity<Object> handleScheduleConflict(ScheduleConflictException exception, WebRequest request) {
+        return problem(ApiErrorCode.SCHEDULE_CONFLICT, null, request, List.of());
+    }
+
+    @ExceptionHandler(SlotUnavailableException.class)
+    ResponseEntity<Object> handleSlotUnavailable(SlotUnavailableException exception, WebRequest request) {
+        return problem(ApiErrorCode.SLOT_UNAVAILABLE, null, request, List.of());
+    }
+
+    @ExceptionHandler(IdempotencyKeyReusedException.class)
+    ResponseEntity<Object> handleIdempotencyKeyReused(
+            IdempotencyKeyReusedException exception,
+            WebRequest request
+    ) {
+        return problem(ApiErrorCode.IDEMPOTENCY_KEY_REUSED, null, request, List.of());
+    }
 
     @ExceptionHandler(CurrentBusinessUserUnavailableException.class)
     ResponseEntity<Object> handleCurrentBusinessUserUnavailable(

@@ -48,6 +48,9 @@ public enum ApiErrorCode {
             "An employee with this code already exists in this business."
     ),
     MEMBER_CONFLICT(HttpStatus.CONFLICT, "member-conflict", "Membership conflict", "The membership operation conflicts with current data."),
+    SCHEDULE_CONFLICT(HttpStatus.CONFLICT, "schedule-conflict", "Schedule conflict", "The schedule operation conflicts with an existing interval."),
+    SLOT_UNAVAILABLE(HttpStatus.CONFLICT, "slot-unavailable", "Slot unavailable", "The selected slot is no longer available."),
+    IDEMPOTENCY_KEY_REUSED(HttpStatus.CONFLICT, "idempotency-key-reused", "Idempotency key reused", "The idempotency key was already used with a different request."),
     AUTH_INVALID_CREDENTIALS(
             HttpStatus.UNAUTHORIZED,
             "auth-invalid-credentials",

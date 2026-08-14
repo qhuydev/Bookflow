@@ -30,7 +30,6 @@ class FlywayMigrationIT {
 
     private static final List<String> FORBIDDEN_BUSINESS_TABLES = List.of(
             "schedules",
-            "bookings",
             "payments"
     );
 
@@ -90,6 +89,18 @@ class FlywayMigrationIT {
         assertThat(versionNine.getDescription())
                 .isEqualTo("service catalog");
 
+        MigrationInfo versionTen = findMigration("10");
+        assertThat(versionTen.getDescription())
+                .isEqualTo("schedule management");
+
+        MigrationInfo versionEleven = findMigration("11");
+        assertThat(versionEleven.getDescription())
+                .isEqualTo("booking foundation");
+
+        MigrationInfo versionTwelve = findMigration("12");
+        assertThat(versionTwelve.getDescription())
+                .isEqualTo("booking concurrency and idempotency");
+
         assertThat(flyway.validateWithResult().validationSuccessful).isTrue();
         assertThat(flyway.info().pending()).isEmpty();
 
@@ -107,6 +118,9 @@ class FlywayMigrationIT {
         assertThat(countMigrationRows("7")).isEqualTo(1);
         assertThat(countMigrationRows("8")).isEqualTo(1);
         assertThat(countMigrationRows("9")).isEqualTo(1);
+        assertThat(countMigrationRows("10")).isEqualTo(1);
+        assertThat(countMigrationRows("11")).isEqualTo(1);
+        assertThat(countMigrationRows("12")).isEqualTo(1);
 
         assertExpectedTablesExist();
     }
@@ -224,6 +238,10 @@ class FlywayMigrationIT {
 
         assertThat(tables).containsExactly(
                 "auth_sessions",
+                "booking_idempotency_keys",
+                "booking_items",
+                "booking_status_history",
+                "bookings",
                 "branch_services",
                 "branches",
                 "business_memberships",
@@ -234,8 +252,11 @@ class FlywayMigrationIT {
                 "flyway_schema_history",
                 "password_reset_tokens",
                 "refresh_tokens",
+                "schedule_breaks",
+                "schedule_exceptions",
                 "services",
-                "users"
+                "users",
+                "working_schedule_rules"
         );
 
         assertThat(tables)

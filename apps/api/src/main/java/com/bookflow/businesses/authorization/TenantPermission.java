@@ -14,5 +14,7 @@ public enum TenantPermission {
     MEMBER_VIEW,
     MEMBER_MANAGE,
     SERVICE_VIEW,
-    SERVICE_MANAGE
+    SERVICE_MANAGE,
+    SCHEDULE_VIEW,
+    SCHEDULE_MANAGE
 }

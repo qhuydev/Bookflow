@@ -288,3 +288,78 @@ Các ticket dưới đây phản ánh source và kết quả regression mới nh
 - Backend unit/integration regression, tenant/role/catalog/Public Catalog security, frontend typecheck/build/lint và tài liệu tổng kết Giai đoạn 4 đã được thực hiện.
 - Trạng thái giữ `Partial` vì chưa chạy trọn chuỗi browser smoke test (session restore, tenant switch và toàn bộ CRUD/assignment trên UI) bằng browser automation hoặc kiểm thử thủ công có ghi nhận.
 - Ticket tiếp theo sau khi hoàn tất smoke test là Giai đoạn 5 — Schedule & Availability; BF-038 không triển khai chức năng Giai đoạn 5.
+
+## BF-039 — Schedule Management Foundation (Hoàn thành)
+
+- Mục tiêu: cung cấp nền quản lý lịch làm việc local theo employee và branch cho Giai đoạn 5.
+- Phạm vi: Flyway V10, working schedule rules, breaks, exceptions, Spring JDBC, REST/OpenAPI, tenant isolation và role authorization.
+- Quy tắc chính: employee phải được gán vào branch ACTIVE; split shift được phép; interval dùng `[start, end)`; rule/break overlap trả `409`; ngày dùng `LocalDate`, giờ dùng `LocalTime`.
+- Authorization: `OWNER`/`ADMIN` được quản lý; `STAFF` chỉ được xem; membership/business không active hoặc resource ngoài tenant được ẩn bằng `404`.
+- Kiểm thử: unit validation và PostgreSQL Testcontainers cho CRUD, overlap, effective date, assignment, composite FK, tenant isolation, role và revocation; `mvn test` và `clean verify` đều PASS.
+- Không nằm trong phạm vi: Availability Engine, public slot API, frontend schedule UI và booking.
+- Ticket phụ thuộc: BF-030, BF-031, BF-033, BF-038.
+- Ticket tiếp theo: BF-040 — Pure Availability Engine.
+
+## BF-040 — Pure Availability Engine (Hoàn thành)
+
+- Mục tiêu: tính deterministic các slot có thể đặt trong một ngày từ schedule BF-039 và dữ liệu busy đã được load sẵn.
+- Phạm vi: half-open interval, working rule filtering, break/TIME_OFF/busy subtraction, WORKING_OVERRIDE, duration và buffer, lead time, booking horizon, configurable slot step, `Clock`, `ZoneId` và DST.
+- Kiến trúc: pure Java domain logic trong `schedules.availability`; không Spring, HTTP, Security, JDBC, repository, PostgreSQL hoặc Redis.
+- Exception precedence: full-day `TIME_OFF` thắng toàn bộ; nếu không có full-day off thì normal schedule và `WORKING_OVERRIDE` được hợp nhất trước khi trừ partial `TIME_OFF`.
+- Time policy: output là customer-visible start/end dạng `Instant`; buffer chỉ dùng cho occupied interval. DST gap dịch tới thời điểm hợp lệ kế tiếp; DST overlap chọn offset sớm hơn và không sinh slot mơ hồ hai lần.
+- Horizon: ngày hiện tại đến `today + maxBookingAdvanceDays` được tính inclusive theo timezone của branch; lead time được làm tròn tự nhiên lên slot grid.
+- Kiểm thử: 20 pure unit tests cho interval/engine và full Maven/Testcontainers regression đều PASS.
+- Không nằm trong phạm vi: availability repository/service/controller, Public Availability API, frontend, booking, concurrency và cache.
+- Ticket phụ thuộc: BF-039.
+- Ticket tiếp theo: BF-041 — Availability Service + Public API.
+
+## BF-041 — Availability Service + Public API (Hoàn thành)
+
+- Mục tiêu: nối Schedule Management BF-039 với Pure Availability Engine BF-040 để trả slot có thể đặt qua API public.
+- Phạm vi: resource validation tenant-safe, JDBC batch query, application orchestration, employee filter/aggregation, timezone, duration/buffer, lead time/horizon, busy interval boundary, REST/OpenAPI và Testcontainers.
+- Endpoint: `GET /api/v1/public/businesses/{slug}/availability` với `branchId`, `serviceId`, `date` bắt buộc và `employeeId` tùy chọn.
+- Query strategy: một resource lookup, một eligible-employee query và tối đa ba batch query cho rules/breaks/exceptions; không query theo employee hoặc theo slot.
+- Public safety: chỉ business/branch/service/employee `ACTIVE` và assignment hợp lệ; resource sai tenant/inactive được ẩn bằng `404`; response không chứa tenant, membership hay schedule internals.
+- Policy: timezone lấy từ Branch; slot step cấu hình mặc định 15 phút; lead time hiện là application-level config mặc định 0; horizon lấy từ `Business.maxBookingAdvanceDays`; không có slot trả `200` với `slots=[]`.
+- Kiểm thử: unit orchestration, pure engine regression và PostgreSQL Testcontainers cho public access, aggregation/filter, schedule/break/exception, buffer, lead time, horizon, timezone, tenant/resource hiding.
+- Không nằm trong phạm vi: frontend, booking, booking concurrency, booking-backed busy intervals và cache.
+- Ticket phụ thuộc: BF-039, BF-040.
+- Ticket tiếp theo: BF-042 — Dashboard Schedule UI + Public Availability UI.
+
+## BF-042 — Dashboard Schedule UI + Public Availability UI (Partial)
+
+- Mục tiêu: nối frontend Next.js với Schedule API BF-039 và Public Availability API BF-041 mà không triển khai booking.
+- Dashboard: employee có deep-link `/dashboard/employees/{employeeId}/schedule`; trang hiển thị branch, working rules, breaks và exceptions từ backend thật.
+- Mutation: OWNER/ADMIN có form create/update/delete; STAFF chỉ đọc. Form dùng `noValidate`, validation React và hiển thị Problem Detail/`SCHEDULE_CONFLICT` tại chỗ; mutation thành công luôn refetch server state.
+- Public flow: business slug → branch → service → employee tùy chọn → date → một request availability. Khi chọn tất cả nhân viên, frontend không gọi API theo từng employee.
+- Slot UI: format theo timezone response, hỗ trợ loading/empty/error và selected-slot state; CTA booking bị vô hiệu hóa rõ ràng.
+- Kiểm tra tự động: TypeScript, ESLint, Next.js production build và `git diff --check` PASS.
+- Trạng thái `Partial`: chưa thực hiện browser smoke Dashboard/Public bằng tài khoản và dữ liệu local thật, do đó chưa xác nhận persistence/reload và network flow qua trình duyệt.
+- Không nằm trong phạm vi: booking, giữ chỗ, concurrency, payment, booking-backed busy intervals và cache.
+- Ticket phụ thuộc: BF-039, BF-041.
+- Bước tiếp theo sau browser smoke: BF-043 — Stage 5 Regression, Browser E2E & Documentation.
+
+## BF-044 — Booking Domain + Schema + State Machine (Hoàn thành)
+
+- Mục tiêu: tạo nền dữ liệu và domain cho booking trước khi mở API tạo booking và xử lý cạnh tranh.
+- Phạm vi: Flyway V11 với `bookings`, `booking_items`, `booking_status_history`; aggregate typed bằng UUID/Instant/BigDecimal; state machine; snapshot dịch vụ; Spring JDBC repository và transaction boundary.
+- Trạng thái ban đầu: `PENDING_CONFIRMATION` vì BF-044 chưa có payment flow; booking mới có hold expiry rõ ràng. `PENDING_PAYMENT` vẫn thuộc state machine cho luồng payment sau.
+- Slot-occupying statuses: `PENDING_PAYMENT`, `PENDING_CONFIRMATION`, `CONFIRMED`, `IN_PROGRESS`; policy chỉ định nghĩa tại `BookingStatus.occupiesSlot()`.
+- Tenant integrity: composite FK chặn booking/item tham chiếu branch, employee hoặc service thuộc tenant khác; mọi lookup repository scope bằng `tenant_id + booking_id`.
+- Transaction: booking, items và initial history được ghi cùng transaction; status update dùng expected-status conditional update và history cùng transaction.
+- Kiểm thử: unit domain/state machine và PostgreSQL Testcontainers cho migrate database sạch, snapshot độc lập, Instant round-trip, tenant FK, rollback creation/transition, indexes và absence của exclusion constraint.
+- Không nằm trong phạm vi: public Create Booking API, availability re-check, exclusion constraint, idempotency, concurrent booking, expiry worker, cancel/reschedule, frontend, payment và notification.
+- Ticket phụ thuộc: BF-039, BF-040, BF-041.
+- Ticket tiếp theo: BF-045 — Create Booking + Exclusion Constraint + Idempotency.
+
+## BF-045 — Create Booking + PostgreSQL Concurrency Guard + Idempotency (Hoàn thành)
+
+- Mục tiêu: tạo booking public từ một slot cụ thể mà backend tự xác minh/tính lại toàn bộ dữ liệu và PostgreSQL là lớp chống đặt trùng cuối cùng.
+- Endpoint: `POST /api/v1/public/businesses/{slug}/bookings`; guest không cần JWT nhưng mutation bắt buộc CSRF và `Idempotency-Key`.
+- Phạm vi: Flyway V12, GiST exclusion constraint `[start,end)`, `booking_idempotency_keys`, server-side availability re-check, service snapshot, `SLOT_UNAVAILABLE`, booking-backed `BusyIntervalProvider`, OpenAPI và concurrency tests.
+- Occupied range: `bookings.start_at/end_at` lưu khoảng nhân viên bị chiếm gồm buffer; response trả khoảng service khách nhìn thấy được dựng từ snapshot.
+- Idempotency: key scope theo tenant, fingerprint SHA-256 từ request semantic đã normalize; key/payload giống trả cùng booking, payload khác trả `409 IDEMPOTENCY_KEY_REUSED`; key và booking commit/rollback trong cùng transaction.
+- Kiểm thử: PostgreSQL 17 Testcontainers xác minh constraint thật, 20 request cùng slot chỉ một thành công, retry cùng key chỉ một row, boundary chạm nhau hợp lệ, employee khác không xung đột và Public Availability trừ active booking.
+- Không nằm trong phạm vi: expiry worker, cancel/reschedule, auto employee, frontend Booking UI, payment, notification và cache.
+- Ticket phụ thuộc: BF-039, BF-040, BF-041, BF-044.
+- Ticket tiếp theo: BF-046 — Booking Expiry + Cancel + Atomic Reschedule.

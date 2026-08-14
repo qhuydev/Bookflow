@@ -11,6 +11,7 @@ BF-008 đã được xác minh bằng MockMvc, full Maven verification và runti
 $env:BOOKFLOW_DB_URL = "jdbc:postgresql://127.0.0.1:5433/bookflow"
 $env:BOOKFLOW_DB_USERNAME = "bookflow"
 $env:BOOKFLOW_DB_PASSWORD = "<lấy từ .env local>"
+$env:BOOKFLOW_BOOKING_HOLD_MINUTES = "10"
 $env:SPRING_PROFILES_ACTIVE = "local"
 .\mvnw.cmd spring-boot:run
 ```
@@ -28,6 +29,8 @@ Metadata hiện dùng title `BookFlow API` và version `v1`. OpenAPI mô tả c�
 
 Swagger UI có nút **Authorize** cho Bearer JWT. Sau login, dán riêng giá trị `accessToken` (không có tiền tố `Bearer`) vào nút này. Với mọi `POST`/`PATCH`/`DELETE` ngoài đăng ký, gọi `GET /api/v1/auth/csrf` trước rồi dán trường `token` vào header `X-XSRF-TOKEN` hiện trong endpoint; browser giữ cookie CSRF cùng phiên.
 
+Create Booking public dùng `POST /api/v1/public/businesses/{slug}/bookings`. Endpoint không cần Bearer JWT nhưng vẫn cần cookie/header CSRF và header `Idempotency-Key`; backend tự tải Service, tính giá/thời lượng/buffer/expiry và trả `409 SLOT_UNAVAILABLE` nếu slot không còn hợp lệ. Xem [Booking và concurrency](../../docs/document/bookflow-giai-doan-6-booking-concurrency-tong-ket.md).
+
 ## Thiết kế authentication
 
 [ADR 0001 — Authentication và refresh token](../../docs/adr/0001-authentication-and-refresh-token.md) đã chốt kiến trúc JWT access token, opaque refresh token, session rotation và browser security. [Security review](../../docs/security/authentication-security-review.md) ghi threat model và test matrix. BF-014 đã có `POST /api/v1/auth/register`: email được chuẩn hóa và password được lưu bằng Argon2id.
@@ -36,7 +39,7 @@ BF-015 bổ sung CSRF/login; BF-017/018/019 hoàn thiện refresh rotation, reus
 
 ## Thiết kế multi-tenancy
 
-[ADR 0002 — Multi-tenancy và membership](../../docs/adr/0002-multi-tenancy-and-membership.md) chốt business là tenant, membership nhiều business cho một user, role `OWNER`/`ADMIN`/`STAFF` và isolation bằng `tenant_id` lấy từ session/membership đã xác thực. BF-026–BF-028 thêm `TenantAuthorizationService`: membership/business được đọc lại từ PostgreSQL trên từng request và permission được kiểm tra qua matrix tường minh. BF-025 dùng `BUSINESS_VIEW` cho hai API GET; BF-029 dùng `BUSINESS_CONFIGURATION_MANAGE` cho `PATCH /api/v1/businesses/{businessId}` (`OWNER`/`ADMIN`). Xem [schema](../../docs/setup/business-membership-schema.md), [API tạo](../../docs/setup/business-creation-api.md), [API xem](../../docs/setup/business-query-api.md), [API cập nhật cấu hình](../../docs/setup/business-configuration-api.md) và [tenant authorization](../../docs/setup/tenant-authorization.md). Chưa có tenant switch, API membership hay booking.
+[ADR 0002 — Multi-tenancy và membership](../../docs/adr/0002-multi-tenancy-and-membership.md) chốt business là tenant, membership nhiều business cho một user, role `OWNER`/`ADMIN`/`STAFF` và isolation bằng `tenant_id` lấy từ session/membership đã xác thực. BF-026–BF-028 thêm `TenantAuthorizationService`: membership/business được đọc lại từ PostgreSQL trên từng request và permission được kiểm tra qua matrix tường minh. BF-025 dùng `BUSINESS_VIEW` cho hai API GET; BF-029 dùng `BUSINESS_CONFIGURATION_MANAGE` cho `PATCH /api/v1/businesses/{businessId}` (`OWNER`/`ADMIN`). Xem [schema](../../docs/setup/business-membership-schema.md), [API tạo](../../docs/setup/business-creation-api.md), [API xem](../../docs/setup/business-query-api.md), [API cập nhật cấu hình](../../docs/setup/business-configuration-api.md) và [tenant authorization](../../docs/setup/tenant-authorization.md).
 
 `clean test` chạy unit/application-context test và MockMvc test cho error contract, không cần Docker. `clean verify` chạy thêm `FlywayMigrationIT`; Docker daemon phải hoạt động nhưng không cần biến `BOOKFLOW_TEST_DB_*` hoặc PostgreSQL local.
 

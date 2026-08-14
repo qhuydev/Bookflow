@@ -30,7 +30,9 @@ public class TenantAuthorizationService {
             Map.entry(TenantPermission.MEMBER_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN)),
             Map.entry(TenantPermission.MEMBER_MANAGE, EnumSet.of(MembershipRole.OWNER)),
             Map.entry(TenantPermission.SERVICE_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.STAFF)),
-            Map.entry(TenantPermission.SERVICE_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN))
+            Map.entry(TenantPermission.SERVICE_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN)),
+            Map.entry(TenantPermission.SCHEDULE_VIEW, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN, MembershipRole.STAFF)),
+            Map.entry(TenantPermission.SCHEDULE_MANAGE, EnumSet.of(MembershipRole.OWNER, MembershipRole.ADMIN))
     );
 
     private final BusinessQueryRepository repository;
