@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
+import { LandingPage } from '@/components/bookflow/landing-page'
 
 export default function Page() {
-  redirect('/an-nhien-wellness')
+  return <LandingPage />
 }

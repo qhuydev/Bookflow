@@ -229,7 +229,7 @@
 - Tiêu chí hoàn thành: partial update không làm mất dữ liệu cũ; `STAFF` là `403`; tenant/business/membership inactive là `404`; slug trùng là `409`; full `clean verify` pass.
 - Kiểm thử: unit validation, Testcontainers cho OWNER/ADMIN, STAFF/tenant khác/inactive, partial update, validation, JWT/CSRF và slug conflict.
 
-## BF-030 — Schema và CRUD/archive chi nhánh (Đang thực hiện)
+## BF-030 — Schema và CRUD/archive chi nhánh (Hoàn thành)
 
 - Mục tiêu: tạo và quản lý branch business bằng JDBC, soft archive và tenant authorization.
 - Phạm vi: Flyway V6, endpoint branch CRUD/archive, `BRANCH_VIEW`/`BRANCH_MANAGE`, validation và PostgreSQL Testcontainers.
@@ -240,39 +240,51 @@
 
 ## Cập nhật trạng thái hiện tại — Giai đoạn business catalog
 
-Các ticket dưới đây phản ánh đúng worktree hiện tại. Chưa ticket nào trong nhóm này được đánh dấu hoàn thành vì chưa chạy lại toàn bộ `clean verify` sau khi các thay đổi chưa commit được ghép chung.
+Các ticket dưới đây phản ánh source và kết quả regression mới nhất. Full Maven `clean verify` với PostgreSQL Testcontainers đã chạy thành công trong BF-038.
 
-## BF-030 — Schema và CRUD/archive chi nhánh (In progress)
+## BF-030 — Schema và CRUD/archive chi nhánh (Hoàn thành)
 
 - Đã có Flyway V6, module Branch CRUD/archive, JWT/CSRF và tenant authorization.
-- Còn cần xác minh lại full regression cùng các migration V7–V9 trước khi chuyển Completed.
+- Flyway V6, CRUD/archive, tenant authorization và regression đều đã được xác minh.
 
-## BF-031 — Employee CRUD + archive (In progress)
+## BF-031 — Employee CRUD + archive (Hoàn thành)
 
 - Đã có Flyway V7, module Employee, archive mềm, code unique theo tenant và permission Employee.
-- Còn cần full regression chung trước khi chuyển Completed.
+- CRUD/archive, code unique theo tenant và permission Employee đã qua full regression.
 
-## BF-032 — Business member và liên kết user–employee (In progress)
+## BF-032 — Business member và liên kết user–employee (Hoàn thành)
 
 - Flyway V8 đã bổ sung `employees.user_id`, FK tới `users` và unique `(tenant_id, user_id)`.
-- API quản lý member, role và liên kết employee chưa được xác minh hoàn chỉnh bằng test trong worktree hiện tại.
+- API member/role/revoke/link đã được xác minh bằng PostgreSQL Testcontainers; BF-038 sửa lỗi link thành công nhưng service vẫn trả `404`.
 
-## BF-033 — Gán Employee vào nhiều Branch (In progress)
+## BF-033 — Gán Employee vào nhiều Branch (Hoàn thành)
 
 - Đã có bảng assignment tenant-scoped trong V7 và API gán/bỏ gán employee–branch.
-- Còn cần full regression chung trước khi chuyển Completed.
+- Assignment tenant-scoped, trạng thái ACTIVE và isolation đã qua full regression.
 
-## BF-034 — Service CRUD + archive (In progress)
+## BF-034 — Service CRUD + archive (Hoàn thành)
 
 - Flyway V9 và module Service catalog/soft archive đã được thêm.
-- Còn thiếu kiểm thử và xác minh đầy đủ theo acceptance criteria.
+- Service CRUD/archive, validation, role và tenant isolation đã được xác minh trên PostgreSQL Testcontainers.
 
-## BF-035 — Gán Service cho Branch và Employee (In progress)
+## BF-035 — Gán Service cho Branch và Employee (Hoàn thành)
 
 - V9 có `branch_services`, `employee_services`, composite FK tenant và rule branch active chung cho employee-service.
-- Còn thiếu kiểm thử và xác minh đầy đủ theo acceptance criteria.
+- Assignment branch/employee, composite FK tenant và rule branch ACTIVE chung đã qua regression.
 
-## BF-036 — Public Catalog API theo business slug (In progress)
+## BF-036 — Public Catalog API theo business slug (Hoàn thành)
 
 - Đã có public endpoint theo slug, module controller/service/repository, OpenAPI, tài liệu và unit test boundary/privacy.
-- Chưa chạy Testcontainers integration test và `clean verify`; chưa được đánh dấu Completed.
+- Public endpoint, filter, ACTIVE-only và private-data boundary đã được xác minh bằng Testcontainers và full `clean verify`.
+
+## BF-037 — Frontend App Router, authentication và catalog integration (Hoàn thành về implementation)
+
+- App Router, auth/CSRF/refresh, protected dashboard, BusinessProvider, CatalogProvider và Public Catalog đã nối backend thật.
+- Dashboard không dùng mock làm nguồn dữ liệu cho Business/Branch/Employee/Member/Service; landing page vẫn giữ nội dung demo tĩnh có chủ đích.
+- TypeScript, production build và ESLint được kiểm tra trong BF-038. Browser end-to-end đầy đủ vẫn là mục kiểm tra thủ công riêng.
+
+## BF-038 — Final Security Regression, Integration Test, Tooling & Documentation (Partial)
+
+- Backend unit/integration regression, tenant/role/catalog/Public Catalog security, frontend typecheck/build/lint và tài liệu tổng kết Giai đoạn 4 đã được thực hiện.
+- Trạng thái giữ `Partial` vì chưa chạy trọn chuỗi browser smoke test (session restore, tenant switch và toàn bộ CRUD/assignment trên UI) bằng browser automation hoặc kiểm thử thủ công có ghi nhận.
+- Ticket tiếp theo sau khi hoàn tất smoke test là Giai đoạn 5 — Schedule & Availability; BF-038 không triển khai chức năng Giai đoạn 5.

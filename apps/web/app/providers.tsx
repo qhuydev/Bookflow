@@ -1,9 +1,10 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { BookFlowMockProvider } from '@/components/bookflow/mock-provider'
 import { AuthProvider } from '@/components/bookflow/auth-provider'
+import { BusinessProvider } from '@/components/bookflow/business-provider'
+import { CatalogProvider } from '@/components/bookflow/catalog-provider'
 
 export function Providers({ children }: { children: ReactNode }) {
-  return <AuthProvider><BookFlowMockProvider>{children}</BookFlowMockProvider></AuthProvider>
+  return <AuthProvider><BusinessProvider><CatalogProvider>{children}</CatalogProvider></BusinessProvider></AuthProvider>
 }

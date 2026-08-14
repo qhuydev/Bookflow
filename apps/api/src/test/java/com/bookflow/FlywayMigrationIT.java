@@ -29,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FlywayMigrationIT {
 
     private static final List<String> FORBIDDEN_BUSINESS_TABLES = List.of(
-            "services",
             "schedules",
             "bookings",
             "payments"
@@ -83,6 +82,14 @@ class FlywayMigrationIT {
         assertThat(versionSeven.getDescription())
                 .isEqualTo("employee schema");
 
+        MigrationInfo versionEight = findMigration("8");
+        assertThat(versionEight.getDescription())
+                .isEqualTo("business member employee link");
+
+        MigrationInfo versionNine = findMigration("9");
+        assertThat(versionNine.getDescription())
+                .isEqualTo("service catalog");
+
         assertThat(flyway.validateWithResult().validationSuccessful).isTrue();
         assertThat(flyway.info().pending()).isEmpty();
 
@@ -98,6 +105,8 @@ class FlywayMigrationIT {
         assertThat(countMigrationRows("5")).isEqualTo(1);
         assertThat(countMigrationRows("6")).isEqualTo(1);
         assertThat(countMigrationRows("7")).isEqualTo(1);
+        assertThat(countMigrationRows("8")).isEqualTo(1);
+        assertThat(countMigrationRows("9")).isEqualTo(1);
 
         assertExpectedTablesExist();
     }
@@ -215,14 +224,17 @@ class FlywayMigrationIT {
 
         assertThat(tables).containsExactly(
                 "auth_sessions",
+                "branch_services",
                 "branches",
                 "business_memberships",
                 "businesses",
                 "employee_branch_assignments",
+                "employee_services",
                 "employees",
                 "flyway_schema_history",
                 "password_reset_tokens",
                 "refresh_tokens",
+                "services",
                 "users"
         );
 
