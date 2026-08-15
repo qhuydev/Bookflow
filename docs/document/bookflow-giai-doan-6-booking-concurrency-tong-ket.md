@@ -6,7 +6,9 @@ BF-044 — Booking Domain + Schema + State Machine: **Completed**.
 
 BF-045 — Create Booking + PostgreSQL Concurrency Guard + Idempotency: **Completed**.
 
-Expiry worker, cancel/reschedule, auto employee và frontend Booking UI chưa được triển khai.
+BF-046 — Booking Expiry + Cancel + Atomic Reschedule: **Completed**.
+
+Auto employee và frontend Booking UI chưa được triển khai.
 
 ## Booking aggregate
 
@@ -185,6 +187,59 @@ BF-045 chưa có expiry worker. Booking pending chỉ nhả slot sau khi ticket 
 - Flyway: database sạch migrate đến V11, validate thành công và lần migrate tiếp theo không có migration pending.
 - Full `mvn test` và `mvn clean verify` là cổng hoàn thành BF-044.
 
-## Giới hạn có chủ đích và ticket tiếp theo
+## Expiry BF-046
 
-BF-046 được hoãn rõ ràng: expiry worker, cancel và atomic reschedule. BF-047 được hoãn: auto employee selection và frontend Booking UI. Payment, Notification và availability cache thuộc các ticket sau; BF-045 không thêm Redis lock/cache và không triển khai các phần này.
+Worker chỉ là scheduled trigger gọi `BookingExpiryService`; logic được test trực tiếp bằng `Clock` cố định, không sleep. Mỗi transaction lấy tối đa `BOOKFLOW_BOOKING_EXPIRY_BATCH_SIZE` candidate qua index `idx_bookings_expiry_candidates` và `FOR UPDATE SKIP LOCKED`, rồi conditional-update trạng thái và ghi history. Interval dùng `BOOKFLOW_BOOKING_EXPIRY_INTERVAL`; worker có thể tắt bằng `BOOKFLOW_BOOKING_EXPIRY_ENABLED` trong test/môi trường cần kiểm soát.
+
+Chỉ `PENDING_PAYMENT` và `PENDING_CONFIRMATION` có `expires_at <= now` được chuyển sang `EXPIRED`. Vì `EXPIRED.occupiesSlot() = false`, booking-backed availability trả slot lại ngay sau commit. Hai instance cùng quét không thể giữ cùng row lock; conditional update là lớp bảo vệ bổ sung, nên không có history trùng. Lỗi insert history rollback cả status.
+
+## Cancel và actor model
+
+Các endpoint thực tế:
+
+```text
+POST /api/v1/customer/bookings/{bookingId}/cancel
+POST /api/v1/businesses/{businessId}/bookings/{bookingId}/cancel
+```
+
+Customer endpoint cần Bearer JWT, chỉ tìm booking có `customer_user_id` bằng JWT `sub` và trả `404` nếu không sở hữu. Business endpoint đọc membership hiện tại từ PostgreSQL; OWNER/ADMIN có `BOOKING_MANAGE`, STAFF nhận `403`, tenant/resource khác bị ẩn bằng `404`. Cả hai cần CSRF. Guest create hiện chỉ lưu contact snapshot, chưa có booking access token; vì vậy BF-046 không dựng guest cancellation thiếu an toàn.
+
+Cancel khóa row bằng `FOR UPDATE NOWAIT`, gọi đúng `BookingStateMachine`, conditional-update rồi insert status history trong cùng transaction. Invalid terminal transition và concurrent mutation trả `409 BOOKING_STATE_CONFLICT`. Sau commit, status cancel không còn chiếm slot.
+
+## Atomic reschedule
+
+Các endpoint thực tế:
+
+```text
+POST /api/v1/customer/bookings/{bookingId}/reschedule
+POST /api/v1/businesses/{businessId}/bookings/{bookingId}/reschedule
+```
+
+Request chỉ nhận `start`, `employeeId` tùy chọn và `reason`; không nhận end/price/duration/buffer/status. Nếu bỏ employee, backend giữ employee hiện tại. Luồng khóa booking tenant/owner-scoped, kiểm tra trạng thái, kiểm tra business/branch/service/employee và assignment ACTIVE, chạy Availability với chính booking bị loại khỏi busy query, rồi update cùng aggregate và ghi `booking_reschedule_history` trong một transaction.
+
+Reschedule dùng duration và buffer snapshot đã chốt tại lúc đặt; thay đổi Service sau đó không re-price hay thay duration booking. `booking_reschedule_history` trace old/new employee, occupied start/end, actor, reason và time mà không giả mạo status transition. Retry cùng thời gian/employee là no-op; không tạo booking mới.
+
+PostgreSQL exclusion constraint V12 vẫn là guard cuối. Nếu availability stale hoặc hai booking cùng nhắm target, SQLSTATE `23P01` được map đúng thành `409 SLOT_UNAVAILABLE`; transaction rollback giữ nguyên range cũ và không để audit dở dang. `FOR UPDATE NOWAIT` làm cancel/reschedule đồng thời trên cùng aggregate có một winner rõ ràng. Expiry dùng row lock `SKIP LOCKED`, vì vậy expiry/cancel không tạo hai terminal history.
+
+## Regression và giới hạn
+
+Testcontainers kiểm tra batch lớn hơn batch size, hai expiry worker, expiry-history rollback, cancel/expiry race, reschedule/cancel race, hai reschedule cùng target, audit rollback, break, self-overlap, snapshot và slot release. Availability Engine vẫn pure; thay đổi duy nhất ở boundary là hỗ trợ `excludedBookingId` và snapshot slot-shape cho reschedule.
+
+## Auto employee và Public Booking UI — BF-047
+
+`employeeId` trong Create Booking đã trở thành tùy chọn. Backend luôn resolve business/branch/service public trước, claim idempotency theo tenant, rồi xử lý theo hai nhánh:
+
+- Có `employeeId`: chỉ candidate đó được xét, giữ behavior BF-045 và trả `404` nếu employee/assignment không hợp lệ.
+- Không có `employeeId`: lấy employee `ACTIVE` cùng tenant, được gán cả branch và service; sắp theo số booking active có `end_at > now`, sau đó theo UUID của PostgreSQL để tie-break ổn định.
+
+Availability được tính một lần ở chế độ aggregate cho request “Tất cả nhân viên”, không lặp query theo từng employee và không sao chép thuật toán schedule. Danh sách employee còn available được giao với candidate order. Mỗi insert booking chạy trong nested transaction/savepoint: nếu PostgreSQL exclusion constraint báo overlap do race, attempt đó rollback sạch và service thử candidate tiếp theo; hết danh sách trả `409 SLOT_UNAVAILABLE`. Transaction ngoài vẫn bao trọn idempotency claim, booking, item và history.
+
+Fingerprint idempotency dùng chính semantic request đã normalize. Khi khách bỏ `employeeId`, fingerprint biểu diễn giá trị rỗng và không phụ thuộc employee backend chọn. Vì vậy retry cùng key/payload trả đúng booking/employee đã commit; thay slot, customer hoặc lựa chọn employee tạo payload khác và bị `IDEMPOTENCY_KEY_REUSED` nếu tái sử dụng key cũ.
+
+Frontend `/{slug}` nối Create Booking API qua `lib/api/bookings.ts`, lấy CSRF theo flow hiện có, gửi cookie và `Idempotency-Key`. Key được tạo một lần cho mỗi payload logical: network/manual retry cùng payload dùng lại key; thay payload sinh key mới. Form không dùng native validation ngầm, không gửi contact rỗng, khóa double-submit bằng ref đồng bộ và hiển thị booking ID, service, employee thực tế, thời gian, tổng tiền, status và expiry khi thành công.
+
+Khi nhận `SLOT_UNAVAILABLE`, UI giữ customer input, báo conflict, refetch availability và bỏ selected slot nếu slot không còn. Sau success UI cũng refetch availability. Chế độ “Tất cả nhân viên” chỉ gọi một availability request aggregate và request tạo booking không chứa `employeeId`.
+
+Automated verification đã bao phủ employee cụ thể, auto assignment, thứ tự deterministic, candidate bận/inactive, all-busy, concurrent fallback, idempotent replay và regression BF-045/BF-046 bằng PostgreSQL Testcontainers. TypeScript, ESLint và production build cũng đạt. Browser smoke với dữ liệu local thật vẫn là cổng còn lại để BF-047 chuyển từ `Đang thực hiện` sang `Hoàn thành`.
+
+Payment, Notification, refund, customer booking management và availability cache tiếp tục được hoãn; BF-047 không thêm Redis lock/cache, generic idempotency framework hay guest booking access token.

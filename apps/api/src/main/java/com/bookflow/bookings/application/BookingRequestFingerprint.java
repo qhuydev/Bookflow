@@ -15,7 +15,7 @@ public final class BookingRequestFingerprint {
                 field(request.slug()),
                 field(request.branchId().toString()),
                 field(request.serviceId().toString()),
-                field(request.employeeId().toString()),
+                field(request.employeeId() == null ? null : request.employeeId().toString()),
                 field(request.start().toInstant().toString()),
                 field(request.customer().name()),
                 field(request.customer().email()),

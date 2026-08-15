@@ -35,6 +35,18 @@ public class BookingBusyIntervalProvider implements BusyIntervalProvider {
             LocalDate date,
             ZoneId zoneId
     ) {
+        return findBusyIntervals(businessId, branchId, employeeIds, date, zoneId, null);
+    }
+
+    @Override
+    public Map<UUID, List<TimeInterval>> findBusyIntervals(
+            UUID businessId,
+            UUID branchId,
+            List<UUID> employeeIds,
+            LocalDate date,
+            ZoneId zoneId,
+            UUID excludedBookingId
+    ) {
         if (employeeIds.isEmpty()) {
             return Map.of();
         }
@@ -55,6 +67,7 @@ public class BookingBusyIntervalProvider implements BusyIntervalProvider {
                   AND status IN (:activeStatuses)
                   AND start_at < :dayEnd
                   AND end_at > :dayStart
+                  AND (CAST(:excludedBookingId AS uuid) IS NULL OR id <> :excludedBookingId)
                 ORDER BY employee_id, start_at, end_at, id
                 """;
         List<BusyRow> rows = jdbc.query(sql, new MapSqlParameterSource()
@@ -62,6 +75,7 @@ public class BookingBusyIntervalProvider implements BusyIntervalProvider {
                         .addValue("branchId", branchId)
                         .addValue("employeeIds", employeeIds)
                         .addValue("activeStatuses", activeStatuses)
+                        .addValue("excludedBookingId", excludedBookingId)
                         .addValue("dayStart", Timestamp.from(dayStart))
                         .addValue("dayEnd", Timestamp.from(dayEnd)),
                 (resultSet, row) -> new BusyRow(

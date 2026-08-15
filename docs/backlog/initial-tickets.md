@@ -363,3 +363,28 @@ Các ticket dưới đây phản ánh source và kết quả regression mới nh
 - Không nằm trong phạm vi: expiry worker, cancel/reschedule, auto employee, frontend Booking UI, payment, notification và cache.
 - Ticket phụ thuộc: BF-039, BF-040, BF-041, BF-044.
 - Ticket tiếp theo: BF-046 — Booking Expiry + Cancel + Atomic Reschedule.
+
+## BF-046 — Booking Expiry + Cancel + Atomic Reschedule (Hoàn thành)
+
+- Mục tiêu: hoàn thiện lifecycle sau create bằng expiry tự động, cancel an toàn và đổi lịch atomic.
+- Phạm vi: Flyway V13, expiry index/audit reschedule, worker batch cấu hình được, `FOR UPDATE SKIP LOCKED`, customer/business cancel, server-side availability re-check có self-exclusion, reschedule audit và OpenAPI.
+- Expiry: chỉ `PENDING_PAYMENT`/`PENDING_CONFIRMATION` có `expires_at <= Clock.instant()` chuyển sang `EXPIRED`; status và history cùng transaction; nhiều worker chỉ tạo một transition/history.
+- Cancel: customer JWT chỉ hủy booking có `customer_user_id` của mình; OWNER/ADMIN hủy theo tenant bằng `BOOKING_MANAGE`; STAFF bị từ chối. Guest booking chưa có access token nên chưa có guest-cancel endpoint giả.
+- Reschedule: giữ nguyên snapshot tên/giá/currency/duration/buffer, tính lại occupied range, loại booking hiện tại khỏi busy intervals và vẫn để exclusion constraint quyết định race cuối cùng. Lỗi target giữ nguyên booking cũ.
+- Kiểm thử: fixed Clock, batch lớn hơn batch size, rollback history/audit, slot release, customer/business authorization, cross-tenant hiding, self-overlap, snapshot, break, worker/cancel/reschedule races và PostgreSQL Testcontainers.
+- Không nằm trong phạm vi: auto employee, frontend Booking UI, payment, notification, refund, cache và guest booking access token.
+- Ticket phụ thuộc: BF-039, BF-040, BF-041, BF-044, BF-045.
+- Ticket tiếp theo: BF-047 — Auto Employee Selection + Booking Frontend.
+
+## BF-047 — Auto Employee Selection + Booking Frontend (Đang thực hiện)
+
+- Mục tiêu: hoàn thiện luồng public từ chọn slot đến tạo booking thật, đồng thời cho phép backend tự chọn nhân viên khi khách chọn “Tất cả nhân viên”.
+- Backend: `employeeId` là tùy chọn. Nếu được gửi, flow BF-045 được giữ nguyên; nếu bỏ trống, candidate `ACTIVE` đúng tenant/branch/service được sắp theo số booking active tương lai tăng dần rồi UUID để tie-break ổn định.
+- Concurrency: availability aggregate chỉ là pre-check. Mỗi candidate được insert trong savepoint; conflict từ exclusion constraint rollback riêng attempt và thử candidate kế tiếp. Hết candidate trả `409 SLOT_UNAVAILABLE`; không dùng Redis lock hoặc `synchronized`.
+- Idempotency: fingerprint phản ánh lựa chọn semantic của khách, gồm cả việc `employeeId` bị bỏ trống nhưng không chứa employee do server chọn. Replay cùng key/payload trả đúng booking và employee ban đầu; payload khác trả `IDEMPOTENCY_KEY_REUSED`.
+- Frontend: Public Catalog có form `noValidate`, validation nhìn thấy được, CSRF, `Idempotency-Key` ổn định theo logical submit, chống double-submit, success summary, xử lý conflict và refetch availability. Không gọi availability theo từng employee và không có Booking mock fallback.
+- Kiểm thử tự động: unit/context test, PostgreSQL Testcontainers concurrency, TypeScript, ESLint và Next.js production build đã đạt trong quá trình triển khai.
+- Trạng thái `Đang thực hiện`: browser smoke bắt buộc với backend/frontend và dữ liệu local thật chưa được xác nhận bằng một browser automation khả dụng trong môi trường Codex; ticket chưa được đánh dấu hoàn thành.
+- Không nằm trong phạm vi: payment, notification, refund, customer booking management, cache và generic idempotency framework.
+- Ticket phụ thuộc: BF-041, BF-044, BF-045, BF-046.
+- Ticket tiếp theo sau khi browser smoke đạt: BF-048 — Stage 6 Final Concurrency Regression + Documentation.

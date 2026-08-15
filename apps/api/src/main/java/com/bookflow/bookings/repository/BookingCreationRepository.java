@@ -3,6 +3,7 @@ package com.bookflow.bookings.repository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,8 +11,15 @@ public interface BookingCreationRepository {
     Optional<CreationContext> findCreationContext(
             String slug,
             UUID branchId,
+            UUID serviceId
+    );
+
+    List<UUID> findEligibleEmployees(
+            UUID tenantId,
+            UUID branchId,
             UUID serviceId,
-            UUID employeeId
+            UUID requestedEmployeeId,
+            Instant now
     );
 
     boolean claimIdempotencyKey(
@@ -35,7 +43,6 @@ public interface BookingCreationRepository {
             UUID tenantId,
             UUID branchId,
             UUID serviceId,
-            UUID employeeId,
             ZoneId zoneId,
             String serviceName,
             BigDecimal price,

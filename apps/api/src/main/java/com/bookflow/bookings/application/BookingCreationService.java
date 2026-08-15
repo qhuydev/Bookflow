@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -56,7 +57,7 @@ public class BookingCreationService {
     public Result create(String slug, String idempotencyKey, CreateBookingRequest request) {
         ValidatedBookingRequest validated = validator.validate(slug, idempotencyKey, request);
         CreationContext context = creationRepository.findCreationContext(
-                        validated.slug(), validated.branchId(), validated.serviceId(), validated.employeeId())
+                        validated.slug(), validated.branchId(), validated.serviceId())
                 .orElseThrow(ResourceNotFoundException::new);
         String requestFingerprint = fingerprint.fingerprint(validated);
         Instant now = clock.instant();
@@ -67,32 +68,53 @@ public class BookingCreationService {
             return replay(context.tenantId(), validated.idempotencyKey(), requestFingerprint);
         }
 
-        recheckAvailability(validated, context);
+        List<UUID> candidates = creationRepository.findEligibleEmployees(
+                context.tenantId(), context.branchId(), context.serviceId(),
+                validated.employeeId(), now
+        );
+        if (validated.employeeId() != null && candidates.isEmpty()) {
+            throw new ResourceNotFoundException();
+        }
+        Set<UUID> availableEmployees = availableEmployeesAtSlot(validated, context);
+        for (UUID employeeId : candidates) {
+            if (!availableEmployees.contains(employeeId)) {
+                continue;
+            }
+            Booking booking = newBooking(validated, context, employeeId);
+            try {
+                persistenceService.create(booking);
+            } catch (DataIntegrityViolationException exception) {
+                if (BookingConstraintViolation.isSlotOverlap(exception)) {
+                    continue;
+                }
+                throw exception;
+            }
+            creationRepository.completeIdempotencyKey(
+                    context.tenantId(), validated.idempotencyKey(), booking.id(), clock.instant()
+            );
+            return new Result(CreateBookingResponse.from(booking), false);
+        }
+        throw new SlotUnavailableException();
+    }
+
+    private Booking newBooking(
+            ValidatedBookingRequest validated,
+            CreationContext context,
+            UUID employeeId
+    ) {
         Instant visibleStart = validated.start().toInstant();
         Instant occupiedStart = visibleStart.minus(Duration.ofMinutes(context.bufferBeforeMinutes()));
         Instant occupiedEnd = visibleStart
                 .plus(Duration.ofMinutes(context.durationMinutes()))
                 .plus(Duration.ofMinutes(context.bufferAfterMinutes()));
-        Booking booking = Booking.create(
-                UUID.randomUUID(), context.tenantId(), context.branchId(), context.employeeId(),
+        return Booking.create(
+                UUID.randomUUID(), context.tenantId(), context.branchId(), employeeId,
                 validated.customer(), occupiedStart, occupiedEnd,
                 List.of(new BookingItemSnapshot(
                         context.serviceId(), context.serviceName(), context.price(), context.currency(),
                         context.durationMinutes(), context.bufferBeforeMinutes(), context.bufferAfterMinutes()
                 )), Duration.ofMinutes(properties.holdMinutes()), clock
         );
-        try {
-            persistenceService.create(booking);
-        } catch (DataIntegrityViolationException exception) {
-            if (BookingConstraintViolation.isSlotOverlap(exception)) {
-                throw new SlotUnavailableException();
-            }
-            throw exception;
-        }
-        creationRepository.completeIdempotencyKey(
-                context.tenantId(), validated.idempotencyKey(), booking.id(), clock.instant()
-        );
-        return new Result(CreateBookingResponse.from(booking), false);
     }
 
     private Result replay(UUID tenantId, String key, String requestFingerprint) {
@@ -109,18 +131,19 @@ public class BookingCreationService {
         );
     }
 
-    private void recheckAvailability(ValidatedBookingRequest request, CreationContext context) {
+    private Set<UUID> availableEmployeesAtSlot(
+            ValidatedBookingRequest request,
+            CreationContext context
+    ) {
         LocalDate localDate = request.start().atZoneSameInstant(context.zoneId()).toLocalDate();
         var availability = availabilityService.availability(
-                request.slug(), context.branchId(), context.serviceId(), context.employeeId(), localDate
+                request.slug(), context.branchId(), context.serviceId(), request.employeeId(), localDate
         );
-        boolean available = availability.slots().stream().anyMatch(slot ->
-                slot.start().toInstant().equals(request.start().toInstant())
-                        && slot.employeeIds().contains(context.employeeId())
-        );
-        if (!available) {
-            throw new SlotUnavailableException();
-        }
+        return availability.slots().stream()
+                .filter(slot -> slot.start().toInstant().equals(request.start().toInstant()))
+                .findFirst()
+                .map(slot -> Set.copyOf(slot.employeeIds()))
+                .orElse(Set.of());
     }
 
     public record Result(CreateBookingResponse response, boolean replayed) {

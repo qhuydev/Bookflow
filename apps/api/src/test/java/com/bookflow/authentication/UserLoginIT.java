@@ -187,7 +187,12 @@ class UserLoginIT {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM auth_sessions WHERE user_id=? AND status='REVOKED' AND revoke_reason='LOGOUT_ALL'", Integer.class, authenticatedUserId)).isEqualTo(1);
         MvcResult freshCsrf = mvc.perform(get("/api/v1/auth/csrf")).andReturn();
         String fresh = JsonPath.read(freshCsrf.getResponse().getContentAsString(), "$.token");
-        MvcResult bad = mvc.perform(post("/api/v1/auth/logout-all").cookie(freshCsrf.getResponse().getCookie("XSRF-TOKEN")).header("X-XSRF-TOKEN", fresh).header("Authorization", "Bearer " + material.accessToken().substring(0, material.accessToken().length() - 2) + "xx")).andReturn();
+        int signatureStart = material.accessToken().lastIndexOf('.') + 1;
+        int tamperAt = signatureStart + 4;
+        char replacement = material.accessToken().charAt(tamperAt) == 'A' ? 'B' : 'A';
+        String badSignature = material.accessToken().substring(0, tamperAt) + replacement
+                + material.accessToken().substring(tamperAt + 1);
+        MvcResult bad = mvc.perform(post("/api/v1/auth/logout-all").cookie(freshCsrf.getResponse().getCookie("XSRF-TOKEN")).header("X-XSRF-TOKEN", fresh).header("Authorization", "Bearer " + badSignature)).andReturn();
         assertThat(bad.getResponse().getStatus()).isEqualTo(401);
         assertThat(bad.getResponse().getContentAsString()).doesNotContain("signature", "key", "token value");
     }

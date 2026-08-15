@@ -170,7 +170,8 @@ class BookingRepositoryIT {
                 "bookings_tenant_id_id_key",
                 "idx_bookings_tenant_branch_start",
                 "idx_bookings_tenant_employee_time_status",
-                "idx_bookings_tenant_status_start"
+                "idx_bookings_tenant_status_start",
+                "idx_bookings_expiry_candidates"
         );
         assertThat(indexes("booking_items")).contains("idx_booking_items_tenant_booking");
         assertThat(indexes("booking_status_history")).contains("idx_booking_history_tenant_booking_changed");
@@ -196,6 +197,9 @@ class BookingRepositoryIT {
                 "booking_idempotency_keys_pkey",
                 "booking_idempotency_keys_tenant_key",
                 "idx_booking_idempotency_tenant_booking"
+        );
+        assertThat(indexes("booking_reschedule_history")).contains(
+                "idx_booking_reschedule_history_tenant_booking_changed"
         );
         assertThat(columnType("bookings", "start_at")).isEqualTo("timestamp with time zone");
         assertThat(columnType("bookings", "end_at")).isEqualTo("timestamp with time zone");

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,12 +24,11 @@ public class JdbcBookingCreationRepository implements BookingCreationRepository 
     public Optional<CreationContext> findCreationContext(
             String slug,
             UUID branchId,
-            UUID serviceId,
-            UUID employeeId
+            UUID serviceId
     ) {
         return jdbc.query("""
                 SELECT b.id AS tenant_id, br.id AS branch_id, s.id AS service_id,
-                       e.id AS employee_id, br.time_zone, s.name AS service_name,
+                       br.time_zone, s.name AS service_name,
                        s.price, s.currency, s.duration_minutes,
                        s.buffer_before_minutes, s.buffer_after_minutes
                 FROM businesses b
@@ -38,18 +38,11 @@ public class JdbcBookingCreationRepository implements BookingCreationRepository 
                   ON s.tenant_id = b.id AND s.id = ? AND s.status = 'ACTIVE'
                 JOIN branch_services bs
                   ON bs.tenant_id = b.id AND bs.branch_id = br.id AND bs.service_id = s.id
-                JOIN employees e
-                  ON e.tenant_id = b.id AND e.id = ? AND e.status = 'ACTIVE'
-                JOIN employee_branch_assignments eba
-                  ON eba.tenant_id = b.id AND eba.employee_id = e.id AND eba.branch_id = br.id
-                JOIN employee_services es
-                  ON es.tenant_id = b.id AND es.employee_id = e.id AND es.service_id = s.id
                 WHERE b.slug = ? AND b.status = 'ACTIVE'
                 """, (resultSet, row) -> new CreationContext(
                         resultSet.getObject("tenant_id", UUID.class),
                         resultSet.getObject("branch_id", UUID.class),
                         resultSet.getObject("service_id", UUID.class),
-                        resultSet.getObject("employee_id", UUID.class),
                         ZoneId.of(resultSet.getString("time_zone")),
                         resultSet.getString("service_name"),
                         resultSet.getBigDecimal("price"),
@@ -57,7 +50,43 @@ public class JdbcBookingCreationRepository implements BookingCreationRepository 
                         resultSet.getInt("duration_minutes"),
                         resultSet.getInt("buffer_before_minutes"),
                         resultSet.getInt("buffer_after_minutes")
-                ), branchId, serviceId, employeeId, slug).stream().findFirst();
+                ), branchId, serviceId, slug).stream().findFirst();
+    }
+
+    @Override
+    public List<UUID> findEligibleEmployees(
+            UUID tenantId,
+            UUID branchId,
+            UUID serviceId,
+            UUID requestedEmployeeId,
+            Instant now
+    ) {
+        return jdbc.query("""
+                SELECT e.id
+                FROM employees e
+                JOIN employee_branch_assignments eba
+                  ON eba.tenant_id = e.tenant_id
+                 AND eba.employee_id = e.id
+                 AND eba.branch_id = ?
+                JOIN employee_services es
+                  ON es.tenant_id = e.tenant_id
+                 AND es.employee_id = e.id
+                 AND es.service_id = ?
+                LEFT JOIN bookings booking
+                  ON booking.tenant_id = e.tenant_id
+                 AND booking.employee_id = e.id
+                 AND booking.status IN (
+                    'PENDING_PAYMENT', 'PENDING_CONFIRMATION', 'CONFIRMED', 'IN_PROGRESS'
+                 )
+                 AND booking.end_at > ?
+                WHERE e.tenant_id = ?
+                  AND e.status = 'ACTIVE'
+                  AND (?::uuid IS NULL OR e.id = ?::uuid)
+                GROUP BY e.id
+                ORDER BY COUNT(booking.id), e.id
+                """, (resultSet, rowNumber) -> resultSet.getObject("id", UUID.class),
+                branchId, serviceId, Timestamp.from(now), tenantId,
+                requestedEmployeeId, requestedEmployeeId);
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.bookflow.bookings.domain.BookingStatusHistory;
 import com.bookflow.bookings.repository.BookingRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -22,7 +23,7 @@ public class BookingPersistenceService {
         this.clock = clock;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NESTED)
     public Booking create(Booking booking) {
         repository.insertBooking(booking);
         repository.insertItems(booking);

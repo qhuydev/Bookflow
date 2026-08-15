@@ -37,7 +37,7 @@ public class BookingRequestValidator {
                 new ApiFieldViolation(field, "Forbidden", "This field is not allowed.")));
         UUID branchId = required(request.getBranchId(), "branchId", violations);
         UUID serviceId = required(request.getServiceId(), "serviceId", violations);
-        UUID employeeId = required(request.getEmployeeId(), "employeeId", violations);
+        UUID employeeId = request.getEmployeeId();
         OffsetDateTime start = required(request.getStart(), "start", violations);
         BookingCustomer customer = validateCustomer(request.getCustomer(), violations);
         fail(violations);

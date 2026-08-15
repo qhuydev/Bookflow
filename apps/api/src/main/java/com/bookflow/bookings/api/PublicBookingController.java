@@ -38,7 +38,7 @@ public class PublicBookingController {
     @PostMapping
     @Operation(
             summary = "Tạo booking công khai",
-            description = "Yêu cầu CSRF cookie/header. Server tự tính giá, thời lượng, buffer, thời điểm kết thúc, trạng thái và expiry."
+            description = "Yêu cầu CSRF cookie/header. Có thể bỏ employeeId để server tự chọn nhân viên phù hợp. Server tự tính giá, thời lượng, buffer, thời điểm kết thúc, trạng thái và expiry."
     )
     @Parameter(
             name = "Idempotency-Key",
@@ -52,7 +52,7 @@ public class PublicBookingController {
             content = @Content(
                     schema = @Schema(implementation = CreateBookingRequest.class),
                     examples = @ExampleObject(value = """
-                            {"branchId":"00000000-0000-0000-0000-000000000001","serviceId":"00000000-0000-0000-0000-000000000002","employeeId":"00000000-0000-0000-0000-000000000003","start":"2026-08-20T09:00:00+07:00","customer":{"name":"Khách Demo","email":"demo.customer@example.test","phone":"+84900000000"}}
+                            {"branchId":"00000000-0000-0000-0000-000000000001","serviceId":"00000000-0000-0000-0000-000000000002","start":"2026-08-20T09:00:00+07:00","customer":{"name":"Khách Demo","email":"demo.customer@example.test","phone":"+84900000000"}}
                             """)
             )
     )

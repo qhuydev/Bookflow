@@ -12,6 +12,9 @@ $env:BOOKFLOW_DB_URL = "jdbc:postgresql://127.0.0.1:5433/bookflow"
 $env:BOOKFLOW_DB_USERNAME = "bookflow"
 $env:BOOKFLOW_DB_PASSWORD = "<lấy từ .env local>"
 $env:BOOKFLOW_BOOKING_HOLD_MINUTES = "10"
+$env:BOOKFLOW_BOOKING_EXPIRY_BATCH_SIZE = "100"
+$env:BOOKFLOW_BOOKING_EXPIRY_INTERVAL = "PT30S"
+$env:BOOKFLOW_BOOKING_EXPIRY_ENABLED = "true"
 $env:SPRING_PROFILES_ACTIVE = "local"
 .\mvnw.cmd spring-boot:run
 ```
@@ -29,7 +32,9 @@ Metadata hiện dùng title `BookFlow API` và version `v1`. OpenAPI mô tả c�
 
 Swagger UI có nút **Authorize** cho Bearer JWT. Sau login, dán riêng giá trị `accessToken` (không có tiền tố `Bearer`) vào nút này. Với mọi `POST`/`PATCH`/`DELETE` ngoài đăng ký, gọi `GET /api/v1/auth/csrf` trước rồi dán trường `token` vào header `X-XSRF-TOKEN` hiện trong endpoint; browser giữ cookie CSRF cùng phiên.
 
-Create Booking public dùng `POST /api/v1/public/businesses/{slug}/bookings`. Endpoint không cần Bearer JWT nhưng vẫn cần cookie/header CSRF và header `Idempotency-Key`; backend tự tải Service, tính giá/thời lượng/buffer/expiry và trả `409 SLOT_UNAVAILABLE` nếu slot không còn hợp lệ. Xem [Booking và concurrency](../../docs/document/bookflow-giai-doan-6-booking-concurrency-tong-ket.md).
+Create Booking public dùng `POST /api/v1/public/businesses/{slug}/bookings`. Endpoint không cần Bearer JWT nhưng vẫn cần cookie/header CSRF và header `Idempotency-Key`; backend tự tải Service, tính giá/thời lượng/buffer/expiry và trả `409 SLOT_UNAVAILABLE` nếu slot không còn hợp lệ. `employeeId` là tùy chọn: khi bỏ trống, backend xếp candidate theo số booking active tương lai rồi UUID, dùng availability aggregate và thử candidate tiếp theo nếu exclusion constraint phát hiện race. Response luôn trả `employeeId` thực tế. Xem [Booking và concurrency](../../docs/document/bookflow-giai-doan-6-booking-concurrency-tong-ket.md).
+
+BF-046 bổ sung expiry worker theo batch, cancel và reschedule. Customer account dùng `POST /api/v1/customer/bookings/{bookingId}/cancel|reschedule`; business dùng `POST /api/v1/businesses/{businessId}/bookings/{bookingId}/cancel|reschedule`. Các endpoint đều cần JWT + CSRF; reschedule giữ nguyên snapshot booking và PostgreSQL exclusion constraint vẫn là guard cuối.
 
 ## Thiết kế authentication
 

@@ -38,6 +38,24 @@ public class AvailabilityQueryService {
     public PublicAvailability availability(
             String rawSlug, UUID branchId, UUID serviceId, UUID employeeId, LocalDate date
     ) {
+        return availability(rawSlug, branchId, serviceId, employeeId, date, null);
+    }
+
+    @Transactional(readOnly = true)
+    public PublicAvailability availability(
+            String rawSlug, UUID branchId, UUID serviceId, UUID employeeId, LocalDate date,
+            UUID excludedBookingId
+    ) {
+        return availability(rawSlug, branchId, serviceId, employeeId, date, excludedBookingId,
+                null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public PublicAvailability availability(
+            String rawSlug, UUID branchId, UUID serviceId, UUID employeeId, LocalDate date,
+            UUID excludedBookingId, Duration durationOverride,
+            Duration bufferBeforeOverride, Duration bufferAfterOverride
+    ) {
         String slug = rawSlug.strip().toLowerCase(Locale.ROOT);
         ResourceContext context = repository.findResourceContext(slug, branchId, serviceId)
                 .orElseThrow(ResourceNotFoundException::new);
@@ -49,14 +67,16 @@ public class AvailabilityQueryService {
         var breaks = repository.findBreaks(context.businessId(), rules.stream().map(value -> value.id()).toList());
         var exceptions = repository.findExceptions(context, employees, date);
         Map<UUID, List<TimeInterval>> busy = busyIntervals.findBusyIntervals(
-                context.businessId(), context.branchId(), employees, date, context.zoneId());
+                context.businessId(), context.branchId(), employees, date, context.zoneId(), excludedBookingId);
 
         Map<SlotKey, TreeSet<UUID>> aggregated = new TreeMap<>();
         for (UUID id : employees) {
             AvailabilityResult result = engine.calculate(new AvailabilityInput(
                     context.branchId(), id, date, context.zoneId(), rules, breaks, exceptions,
-                    busy.getOrDefault(id, List.of()), Duration.ofMinutes(context.durationMinutes()),
-                    Duration.ofMinutes(context.bufferBeforeMinutes()), Duration.ofMinutes(context.bufferAfterMinutes()),
+                    busy.getOrDefault(id, List.of()),
+                    durationOverride == null ? Duration.ofMinutes(context.durationMinutes()) : durationOverride,
+                    bufferBeforeOverride == null ? Duration.ofMinutes(context.bufferBeforeMinutes()) : bufferBeforeOverride,
+                    bufferAfterOverride == null ? Duration.ofMinutes(context.bufferAfterMinutes()) : bufferAfterOverride,
                     Duration.ofMinutes(properties.defaultLeadTimeMinutes()), context.maxBookingAdvanceDays(),
                     Duration.ofMinutes(properties.slotStepMinutes())));
             for (AvailabilitySlot slot : result.slots()) {

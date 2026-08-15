@@ -51,6 +51,7 @@ public enum ApiErrorCode {
     SCHEDULE_CONFLICT(HttpStatus.CONFLICT, "schedule-conflict", "Schedule conflict", "The schedule operation conflicts with an existing interval."),
     SLOT_UNAVAILABLE(HttpStatus.CONFLICT, "slot-unavailable", "Slot unavailable", "The selected slot is no longer available."),
     IDEMPOTENCY_KEY_REUSED(HttpStatus.CONFLICT, "idempotency-key-reused", "Idempotency key reused", "The idempotency key was already used with a different request."),
+    BOOKING_STATE_CONFLICT(HttpStatus.CONFLICT, "booking-state-conflict", "Booking state conflict", "The booking can no longer be changed in its current state."),
     AUTH_INVALID_CREDENTIALS(
             HttpStatus.UNAUTHORIZED,
             "auth-invalid-credentials",

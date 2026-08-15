@@ -9,6 +9,7 @@ import { ApiError } from '@/lib/api-client'
 import { availabilityApi } from '@/lib/api/availability'
 import { PublicAvailabilityResponse, PublicBranch, PublicBusiness, PublicEmployee, PublicService } from '@/lib/api/contracts'
 import { publicCatalogApi } from '@/lib/api/public-catalog'
+import { PublicBookingForm } from './public-booking-form'
 import { Empty, Field, Input } from './ui'
 
 const messageFor = (cause: unknown, fallback: string) => cause instanceof ApiError
@@ -29,6 +30,8 @@ export function PublicCatalog({ slug }: { slug: string }) {
   const [catalogError, setCatalogError] = useState('')
   const [availabilityError, setAvailabilityError] = useState('')
   const [loadingAvailability, setLoadingAvailability] = useState(false)
+  const [availabilityRevision, setAvailabilityRevision] = useState(0)
+  const [bookingStarted, setBookingStarted] = useState(false)
 
   useEffect(() => {
     let current = true
@@ -64,7 +67,13 @@ export function PublicCatalog({ slug }: { slug: string }) {
     let current = true
     Promise.resolve().then(() => { if (current) setLoadingAvailability(true) })
       .then(() => availabilityApi.find(slug, { branchId, serviceId, date, employeeId: employeeId || undefined }))
-      .then(value => { if (current) setAvailability(value) })
+      .then(value => {
+        if (!current) return
+        setAvailability(value)
+        setSelectedSlot(selectedStart => selectedStart && value.slots.some(slot => slot.start === selectedStart)
+          ? selectedStart
+          : null)
+      })
       .catch(cause => {
         if (!current) return
         setAvailabilityError(cause instanceof ApiError && cause.problem.status === 404
@@ -73,7 +82,7 @@ export function PublicCatalog({ slug }: { slug: string }) {
       })
       .finally(() => { if (current) setLoadingAvailability(false) })
     return () => { current = false }
-  }, [branchId, date, employeeId, serviceId, slug])
+  }, [availabilityRevision, branchId, date, employeeId, serviceId, slug])
 
   const selectedService = services.find(service => service.id === serviceId)
   const selected = availability?.slots.find(slot => slot.start === selectedSlot)
@@ -83,13 +92,13 @@ export function PublicCatalog({ slug }: { slug: string }) {
   const formatTime = (value: string) => formatter.format(new Date(value))
   const selectBranch = (value: string) => {
     setBranchId(value); setServiceId(''); setServices([]); setEmployeeId(''); setEmployees([])
-    setAvailability(null); setSelectedSlot(null); setAvailabilityError(''); setLoadingAvailability(false)
+    setAvailability(null); setSelectedSlot(null); setAvailabilityError(''); setLoadingAvailability(false); setBookingStarted(false)
   }
   const selectService = (value: string) => {
-    setServiceId(value); setEmployeeId(''); setEmployees([]); setAvailability(null); setSelectedSlot(null); setAvailabilityError(''); setLoadingAvailability(false)
+    setServiceId(value); setEmployeeId(''); setEmployees([]); setAvailability(null); setSelectedSlot(null); setAvailabilityError(''); setLoadingAvailability(false); setBookingStarted(false)
   }
-  const selectEmployee = (value: string) => { setEmployeeId(value); setAvailability(null); setSelectedSlot(null); setAvailabilityError(''); setLoadingAvailability(false) }
-  const selectDate = (value: string) => { setDate(value); setAvailability(null); setSelectedSlot(null); setAvailabilityError(''); setLoadingAvailability(false) }
+  const selectEmployee = (value: string) => { setEmployeeId(value); setAvailability(null); setSelectedSlot(null); setAvailabilityError(''); setLoadingAvailability(false); setBookingStarted(false) }
+  const selectDate = (value: string) => { setDate(value); setAvailability(null); setSelectedSlot(null); setAvailabilityError(''); setLoadingAvailability(false); setBookingStarted(false) }
 
   if (catalogError) return <main className="mx-auto max-w-3xl p-10"><h1 className="font-serif text-4xl font-semibold">{catalogError}</h1><Link className="mt-6 inline-block underline" href="/">← Khám phá</Link></main>
   if (!business) return <main className="grid min-h-screen place-items-center">Đang tải catalog…</main>
@@ -108,10 +117,21 @@ export function PublicCatalog({ slug }: { slug: string }) {
           <Field label="Ngày"><Input type="date" value={date} onChange={event => selectDate(event.target.value)} /></Field>
         </div>
         {availabilityError && <p role="alert" className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{availabilityError}</p>}
-        <div className="mt-6"><h2 className="font-serif text-2xl font-semibold">Giờ còn trống</h2>{loadingAvailability ? <p className="mt-4">Đang kiểm tra lịch trống...</p> : availability && availability.slots.length === 0 ? <Empty>Không có giờ phù hợp trong ngày này.</Empty> : availability ? <div className="mt-4 flex flex-wrap gap-2">{availability.slots.map(slot => <button key={`${slot.start}-${slot.end}`} onClick={() => setSelectedSlot(slot.start)} className={`rounded-xl border px-4 py-3 text-left text-sm ${selectedSlot === slot.start ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}><b>{formatTime(slot.start)}</b>{!employeeId && slot.employeeIds.length > 1 && <span className="ml-2 text-xs opacity-75">{slot.employeeIds.length} nhân viên</span>}</button>)}</div> : <p className="mt-4 text-sm text-muted-foreground">Chọn branch, dịch vụ và ngày để xem lịch trống.</p>}</div>
-        {selected && <div className="mt-6 rounded-2xl bg-muted p-4"><p className="text-sm">Đã chọn: <b>{formatTime(selected.start)}–{formatTime(selected.end)}</b></p><Button disabled className="mt-3">Tiếp tục — Đặt lịch sắp ra mắt</Button></div>}
+        <div className="mt-6"><h2 className="font-serif text-2xl font-semibold">Giờ còn trống</h2>{loadingAvailability ? <p className="mt-4">Đang kiểm tra lịch trống...</p> : availability && availability.slots.length === 0 ? <Empty>Không có giờ phù hợp trong ngày này.</Empty> : availability ? <div className="mt-4 flex flex-wrap gap-2">{availability.slots.map(slot => <button type="button" key={`${slot.start}-${slot.end}`} onClick={() => { setSelectedSlot(slot.start); setBookingStarted(true) }} className={`rounded-xl border px-4 py-3 text-left text-sm ${selectedSlot === slot.start ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}><b>{formatTime(slot.start)}</b>{!employeeId && slot.employeeIds.length > 1 && <span className="ml-2 text-xs opacity-75">{slot.employeeIds.length} nhân viên</span>}</button>)}</div> : <p className="mt-4 text-sm text-muted-foreground">Chọn branch, dịch vụ và ngày để xem lịch trống.</p>}</div>
+        {bookingStarted && selectedService && availability && <PublicBookingForm
+          key={`${branchId}-${serviceId}-${employeeId}-${date}`}
+          slug={slug}
+          branchId={branchId}
+          service={selectedService}
+          employeeId={employeeId || undefined}
+          employeeName={id => employees.find(employee => employee.id === id)?.fullName ?? 'Nhân viên phù hợp'}
+          slot={selected}
+          timeZone={availability.timeZone}
+          onCreated={() => setAvailabilityRevision(value => value + 1)}
+          onSlotUnavailable={() => setAvailabilityRevision(value => value + 1)}
+        />}
       </section>
-      <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]"><section><p className="text-xs font-bold uppercase tracking-widest text-accent-foreground">Dịch vụ</p><h2 className="mt-2 font-serif text-3xl font-semibold">Chọn trải nghiệm của bạn</h2>{services.length ? <div className="mt-6 grid gap-3">{services.map(value => <article key={value.id} className={`flex justify-between rounded-2xl border bg-card p-5 ${serviceId === value.id ? 'border-primary' : ''}`}><div><h3 className="font-semibold">{value.name}</h3><p className="mt-1 text-sm text-muted-foreground">{value.description} · {value.durationMinutes} phút</p><p className="mt-3 text-sm">{new Intl.NumberFormat('vi-VN').format(Number(value.price))} {value.currency}</p></div><Button size="sm" variant="outline" onClick={() => selectService(value.id)}>{serviceId === value.id ? 'Đã chọn' : 'Chọn'}</Button></article>)}</div> : <Empty>Chi nhánh này chưa có dịch vụ đang hoạt động.</Empty>}<h2 className="mt-10 font-serif text-3xl font-semibold">Đội ngũ</h2>{employees.length ? <div className="mt-5 grid gap-3 md:grid-cols-2">{employees.map(value => <article key={value.id} className="rounded-2xl border p-5"><h3 className="font-semibold">{value.fullName}</h3><p className="mt-2 text-sm text-muted-foreground">{value.bio}</p></article>)}</div> : <Empty>{serviceId ? 'Chưa có nhân viên phù hợp.' : 'Chọn dịch vụ để xem nhân viên phù hợp.'}</Empty>}</section><aside className="rounded-3xl border bg-card p-6"><h3 className="text-lg font-semibold">Thông tin địa điểm</h3><div className="mt-5 grid gap-4 text-sm"><p className="flex gap-3"><Building2 className="size-4" />{branch?.addressLine1 ?? branch?.city ?? 'Chi nhánh trung tâm'}</p><p className="flex gap-3"><CalendarDays className="size-4" />{selectedService ? `${selectedService.durationMinutes} phút · ${selectedService.name}` : 'Chọn dịch vụ và ngày'}</p></div><Button disabled className="mt-7 w-full">Đặt lịch — Sắp ra mắt</Button></aside></div>
+      <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]"><section><p className="text-xs font-bold uppercase tracking-widest text-accent-foreground">Dịch vụ</p><h2 className="mt-2 font-serif text-3xl font-semibold">Chọn trải nghiệm của bạn</h2>{services.length ? <div className="mt-6 grid gap-3">{services.map(value => <article key={value.id} className={`flex justify-between rounded-2xl border bg-card p-5 ${serviceId === value.id ? 'border-primary' : ''}`}><div><h3 className="font-semibold">{value.name}</h3><p className="mt-1 text-sm text-muted-foreground">{value.description} · {value.durationMinutes} phút</p><p className="mt-3 text-sm">{new Intl.NumberFormat('vi-VN').format(Number(value.price))} {value.currency}</p></div><Button size="sm" variant="outline" onClick={() => selectService(value.id)}>{serviceId === value.id ? 'Đã chọn' : 'Chọn'}</Button></article>)}</div> : <Empty>Chi nhánh này chưa có dịch vụ đang hoạt động.</Empty>}<h2 className="mt-10 font-serif text-3xl font-semibold">Đội ngũ</h2>{employees.length ? <div className="mt-5 grid gap-3 md:grid-cols-2">{employees.map(value => <article key={value.id} className="rounded-2xl border p-5"><h3 className="font-semibold">{value.fullName}</h3><p className="mt-2 text-sm text-muted-foreground">{value.bio}</p></article>)}</div> : <Empty>{serviceId ? 'Chưa có nhân viên phù hợp.' : 'Chọn dịch vụ để xem nhân viên phù hợp.'}</Empty>}</section><aside className="rounded-3xl border bg-card p-6"><h3 className="text-lg font-semibold">Thông tin địa điểm</h3><div className="mt-5 grid gap-4 text-sm"><p className="flex gap-3"><Building2 className="size-4" />{branch?.addressLine1 ?? branch?.city ?? 'Chi nhánh trung tâm'}</p><p className="flex gap-3"><CalendarDays className="size-4" />{selectedService ? `${selectedService.durationMinutes} phút · ${selectedService.name}` : 'Chọn dịch vụ và ngày'}</p></div><Button type="button" disabled={!selected} onClick={() => selected && setBookingStarted(true)} className="mt-7 w-full">{selected ? 'Tiếp tục đặt lịch' : 'Chọn một khung giờ'}</Button></aside></div>
     </main>
   </main>
 }

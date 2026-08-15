@@ -145,6 +145,21 @@ public record Booking(
         );
     }
 
+    public Booking rescheduleTo(UUID targetEmployeeId, Instant targetStartAt, Instant targetEndAt, Clock clock) {
+        if (targetEmployeeId == null) {
+            throw new InvalidBookingException("Rescheduled booking requires an employee.");
+        }
+        if (targetStartAt == null || targetEndAt == null || !targetStartAt.isBefore(targetEndAt)) {
+            throw new InvalidBookingException("Rescheduled booking start must be before end.");
+        }
+        Instant clockInstant = Objects.requireNonNull(clock, "clock").instant();
+        Instant changedAt = clockInstant.isAfter(updatedAt) ? clockInstant : updatedAt.plusNanos(1_000);
+        return new Booking(
+                id, tenantId, branchId, targetEmployeeId, customer, targetStartAt, targetEndAt,
+                status, currency, totalAmount, expiresAt, items, statusHistory, createdAt, changedAt
+        );
+    }
+
     private static void requireIdentity(UUID id, UUID tenantId, UUID branchId, BookingCustomer customer) {
         if (id == null || tenantId == null || branchId == null || customer == null) {
             throw new InvalidBookingException("Booking identity, tenant, branch and customer are required.");

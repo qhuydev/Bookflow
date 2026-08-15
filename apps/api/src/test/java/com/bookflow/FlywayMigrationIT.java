@@ -101,6 +101,10 @@ class FlywayMigrationIT {
         assertThat(versionTwelve.getDescription())
                 .isEqualTo("booking concurrency and idempotency");
 
+        MigrationInfo versionThirteen = findMigration("13");
+        assertThat(versionThirteen.getDescription())
+                .isEqualTo("booking lifecycle");
+
         assertThat(flyway.validateWithResult().validationSuccessful).isTrue();
         assertThat(flyway.info().pending()).isEmpty();
 
@@ -121,6 +125,7 @@ class FlywayMigrationIT {
         assertThat(countMigrationRows("10")).isEqualTo(1);
         assertThat(countMigrationRows("11")).isEqualTo(1);
         assertThat(countMigrationRows("12")).isEqualTo(1);
+        assertThat(countMigrationRows("13")).isEqualTo(1);
 
         assertExpectedTablesExist();
     }
@@ -240,6 +245,7 @@ class FlywayMigrationIT {
                 "auth_sessions",
                 "booking_idempotency_keys",
                 "booking_items",
+                "booking_reschedule_history",
                 "booking_status_history",
                 "bookings",
                 "branch_services",

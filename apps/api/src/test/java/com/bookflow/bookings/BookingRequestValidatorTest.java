@@ -59,7 +59,30 @@ class BookingRequestValidatorTest {
                 .isInstanceOf(RequestValidationException.class)
                 .satisfies(exception -> assertThat(((RequestValidationException) exception).violations())
                         .extracting(violation -> violation.field())
-                        .contains("branchId", "serviceId", "employeeId", "start", "customer.userId"));
+                        .contains("branchId", "serviceId", "start", "customer.userId")
+                        .doesNotContain("employeeId"));
+    }
+
+    @Test
+    void acceptsOmittedEmployeeAndFingerprintsTheCustomerSemanticChoice() {
+        CreateBookingRequest first = request("Guest", "guest@example.test", null,
+                OffsetDateTime.parse("2026-08-20T09:00:00Z"));
+        CreateBookingRequest second = request("Guest", "guest@example.test", null,
+                OffsetDateTime.parse("2026-08-20T09:00:00Z"));
+        first.setEmployeeId(null);
+        second.setEmployeeId(null);
+
+        var validatedFirst = validator.validate("business", "booking-auto-0001", first);
+        var validatedSecond = validator.validate("business", "booking-auto-0002", second);
+
+        assertThat(validatedFirst.employeeId()).isNull();
+        assertThat(fingerprint.fingerprint(validatedFirst))
+                .isEqualTo(fingerprint.fingerprint(validatedSecond));
+
+        second.setEmployeeId(UUID.fromString("00000000-0000-0000-0000-000000000004"));
+        var specified = validator.validate("business", "booking-auto-0003", second);
+        assertThat(fingerprint.fingerprint(specified))
+                .isNotEqualTo(fingerprint.fingerprint(validatedFirst));
     }
 
     private CreateBookingRequest request(

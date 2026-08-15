@@ -14,7 +14,10 @@ import com.bookflow.businesses.members.application.MemberConflictException;
 import com.bookflow.authentication.ratelimit.RateLimitExceededException;
 import com.bookflow.authentication.ratelimit.RateLimitUnavailableException;
 import com.bookflow.bookings.application.IdempotencyKeyReusedException;
+import com.bookflow.bookings.application.BookingConflictException;
+import com.bookflow.bookings.application.BookingStateChangedException;
 import com.bookflow.bookings.application.SlotUnavailableException;
+import com.bookflow.bookings.domain.InvalidBookingTransitionException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -116,6 +119,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request
     ) {
         return problem(ApiErrorCode.IDEMPOTENCY_KEY_REUSED, null, request, List.of());
+    }
+
+    @ExceptionHandler({
+            BookingConflictException.class,
+            BookingStateChangedException.class,
+            InvalidBookingTransitionException.class
+    })
+    ResponseEntity<Object> handleBookingStateConflict(RuntimeException exception, WebRequest request) {
+        return problem(ApiErrorCode.BOOKING_STATE_CONFLICT, null, request, List.of());
     }
 
     @ExceptionHandler(CurrentBusinessUserUnavailableException.class)

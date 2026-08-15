@@ -60,7 +60,7 @@ tests/      # Tài nguyên kiểm thử dùng chung trong tương lai
 
 ## Trạng thái hiện tại
 
-Dự án đã có nền xác thực, business catalog theo tenant, Schedule Management Foundation, Pure Availability Engine, Public Availability API và luồng tạo Booking: đăng ký, JWT RS256, session/refresh rotation, khôi phục mật khẩu, Redis rate limiting, Business/Branch/Employee/Member/Service API, assignment, Public Catalog, working rules/breaks/exceptions, tìm slot public, state machine booking, idempotency và PostgreSQL concurrency guard. Dashboard Next.js đã dùng API thật cho catalog và có Schedule/Public Availability UI. PostgreSQL là nguồn sự thật chống đặt trùng; expiry worker, cancel/reschedule, Booking UI và payment chưa được triển khai.
+Dự án đã có nền xác thực, business catalog theo tenant, Schedule Management Foundation, Pure Availability Engine, Public Availability API và lifecycle Booking: đăng ký, JWT RS256, session/refresh rotation, khôi phục mật khẩu, Redis rate limiting, Business/Branch/Employee/Member/Service API, assignment, Public Catalog, working rules/breaks/exceptions, tìm slot public, state machine booking, idempotency, PostgreSQL concurrency guard, expiry theo batch, cancel và atomic reschedule. BF-047 đã triển khai auto employee và Public Booking UI dùng API thật; browser smoke local vẫn chưa được xác nhận nên ticket còn `In progress`. PostgreSQL vẫn là nguồn sự thật chống đặt trùng; payment chưa được triển khai.
 
 ```text
 BF-001: Completed
@@ -97,6 +97,8 @@ BF-041: Completed — Availability query service, batch JDBC và Public Availabi
 BF-042: Partial — Dashboard Schedule UI và Public Availability UI đã triển khai; browser smoke với dữ liệu local thật chưa chạy
 BF-044: Completed — Booking domain, Flyway V11, state machine, snapshot, status history và JDBC repository foundation
 BF-045: Completed — Create Booking API, Flyway V12 exclusion constraint, durable idempotency và booking-backed availability
+BF-046: Completed — expiry worker, customer/business cancel và atomic reschedule với Flyway V13
+BF-047: In progress — auto employee và Public Booking UI đã triển khai/test tự động; còn browser smoke local bắt buộc
 ```
 
 ## CI GitHub Actions
@@ -154,7 +156,7 @@ Health URL: `http://127.0.0.1:8080/actuator/health`.
 
 Khi backend đang chạy, OpenAPI JSON có tại `http://127.0.0.1:8080/v3/api-docs` và Swagger UI có tại `http://127.0.0.1:8080/swagger-ui/index.html`. Các API business catalog dùng tenant authorization và permission matrix PostgreSQL; Public Catalog chỉ công khai dữ liệu ACTIVE an toàn theo slug.
 
-Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [schema business/membership](docs/setup/business-membership-schema.md), [API tạo business](docs/setup/business-creation-api.md), [API xem business](docs/setup/business-query-api.md), [API cập nhật cấu hình](docs/setup/business-configuration-api.md), [API chi nhánh](docs/setup/branch-api.md), [tenant authorization](docs/setup/tenant-authorization.md), [Public Availability API](docs/setup/public-availability-api.md), [tổng kết Schedule & Availability](docs/document/bookflow-giai-doan-5-schedule-availability-tong-ket.md), [Booking và concurrency](docs/document/bookflow-giai-doan-6-booking-concurrency-tong-ket.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md), [chuẩn lỗi API](docs/standards/api-errors.md), [ADR authentication](docs/adr/0001-authentication-and-refresh-token.md), [ADR multi-tenancy](docs/adr/0002-multi-tenancy-and-membership.md) và [README của backend](apps/api/README.md). Backend chưa dùng JPA; booking expiry/cancel/reschedule và payment vẫn được hoãn.
+Xem [hướng dẫn Spring Boot local](docs/setup/spring-boot-local.md), [hướng dẫn Flyway](docs/setup/flyway.md), [schema business/membership](docs/setup/business-membership-schema.md), [API tạo business](docs/setup/business-creation-api.md), [API xem business](docs/setup/business-query-api.md), [API cập nhật cấu hình](docs/setup/business-configuration-api.md), [API chi nhánh](docs/setup/branch-api.md), [tenant authorization](docs/setup/tenant-authorization.md), [Public Availability API](docs/setup/public-availability-api.md), [tổng kết Schedule & Availability](docs/document/bookflow-giai-doan-5-schedule-availability-tong-ket.md), [Booking và concurrency](docs/document/bookflow-giai-doan-6-booking-concurrency-tong-ket.md), [hướng dẫn Testcontainers](docs/setup/testcontainers.md), [chuẩn lỗi API](docs/standards/api-errors.md), [ADR authentication](docs/adr/0001-authentication-and-refresh-token.md), [ADR multi-tenancy](docs/adr/0002-multi-tenancy-and-membership.md) và [README của backend](apps/api/README.md). Backend chưa dùng JPA; payment vẫn được hoãn.
 
 ## Frontend quick start
 
@@ -171,7 +173,7 @@ Chạy toàn bộ kiểm tra frontend:
 npm --prefix .\apps\web run verify
 ```
 
-Xem [hướng dẫn Next.js local](docs/setup/nextjs-local.md), [README của frontend](apps/web/README.md) và [tổng kết Giai đoạn 4](docs/document/bookflow-giai-doan-4-catalog-tong-ket.md). Frontend đã có authentication, protected dashboard và catalog API integration; booking vẫn chưa thuộc phạm vi hiện tại.
+Xem [hướng dẫn Next.js local](docs/setup/nextjs-local.md), [README của frontend](apps/web/README.md) và [tổng kết Giai đoạn 4](docs/document/bookflow-giai-doan-4-catalog-tong-ket.md). Frontend đã có authentication, protected dashboard, catalog API integration và Public Booking UI. Booking UI gửi CSRF + `Idempotency-Key`, hỗ trợ nhân viên cụ thể hoặc tự chọn nhân viên; browser smoke local BF-047 vẫn cần được thực hiện trước khi đánh dấu hoàn thành.
 
 ## Kiểm tra môi trường
 

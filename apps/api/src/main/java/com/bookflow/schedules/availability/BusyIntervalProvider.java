@@ -15,4 +15,15 @@ public interface BusyIntervalProvider {
             LocalDate date,
             ZoneId zoneId
     );
+
+    default Map<UUID, List<TimeInterval>> findBusyIntervals(
+            UUID businessId,
+            UUID branchId,
+            List<UUID> employeeIds,
+            LocalDate date,
+            ZoneId zoneId,
+            UUID excludedBookingId
+    ) {
+        return findBusyIntervals(businessId, branchId, employeeIds, date, zoneId);
+    }
 }

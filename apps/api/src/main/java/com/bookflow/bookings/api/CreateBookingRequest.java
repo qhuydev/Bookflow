@@ -1,6 +1,7 @@
 package com.bookflow.bookings.api;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
@@ -10,6 +11,7 @@ import java.util.UUID;
 public final class CreateBookingRequest {
     private UUID branchId;
     private UUID serviceId;
+    @Schema(description = "Nhân viên cụ thể; bỏ trống để BookFlow tự chọn nhân viên phù hợp")
     private UUID employeeId;
     private OffsetDateTime start;
     private CreateBookingCustomerRequest customer;

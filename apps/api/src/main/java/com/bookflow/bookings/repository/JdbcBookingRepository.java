@@ -3,6 +3,7 @@ package com.bookflow.bookings.repository;
 import com.bookflow.bookings.domain.Booking;
 import com.bookflow.bookings.domain.BookingCustomer;
 import com.bookflow.bookings.domain.BookingItem;
+import com.bookflow.bookings.domain.BookingRescheduleHistory;
 import com.bookflow.bookings.domain.BookingStatus;
 import com.bookflow.bookings.domain.BookingStatusHistory;
 import org.springframework.context.annotation.Profile;
@@ -80,15 +81,58 @@ public class JdbcBookingRepository implements BookingRepository {
 
     @Override
     public Optional<Booking> findByTenantAndId(UUID tenantId, UUID bookingId) {
-        return jdbc.query("""
+        return findBooking("""
                 SELECT id, tenant_id, branch_id, employee_id, customer_user_id,
                        customer_name, customer_email, customer_phone,
                        start_at, end_at, status, currency, total_amount, expires_at,
                        created_at, updated_at
                 FROM bookings
                 WHERE tenant_id = ? AND id = ?
-                """, (resultSet, rowNumber) -> mapBooking(resultSet), tenantId, bookingId)
-                .stream().findFirst();
+                """, tenantId, bookingId);
+    }
+
+    @Override
+    public Optional<Booking> findByTenantAndIdForUpdate(UUID tenantId, UUID bookingId) {
+        return findBooking("""
+                SELECT id, tenant_id, branch_id, employee_id, customer_user_id,
+                       customer_name, customer_email, customer_phone,
+                       start_at, end_at, status, currency, total_amount, expires_at,
+                       created_at, updated_at
+                FROM bookings
+                WHERE tenant_id = ? AND id = ?
+                FOR UPDATE NOWAIT
+                """, tenantId, bookingId);
+    }
+
+    @Override
+    public Optional<Booking> findByCustomerUserAndIdForUpdate(UUID userId, UUID bookingId) {
+        return findBooking("""
+                SELECT b.id, b.tenant_id, b.branch_id, b.employee_id, b.customer_user_id,
+                       b.customer_name, b.customer_email, b.customer_phone,
+                       b.start_at, b.end_at, b.status, b.currency, b.total_amount, b.expires_at,
+                       b.created_at, b.updated_at
+                FROM bookings b
+                JOIN businesses business ON business.id = b.tenant_id AND business.status = 'ACTIVE'
+                WHERE b.customer_user_id = ? AND b.id = ?
+                FOR UPDATE OF b NOWAIT
+                """, userId, bookingId);
+    }
+
+    @Override
+    public List<ExpiryCandidate> findExpiredCandidatesForUpdate(Instant now, int limit) {
+        return jdbc.query("""
+                SELECT tenant_id, id, status
+                FROM bookings
+                WHERE status IN ('PENDING_PAYMENT', 'PENDING_CONFIRMATION')
+                  AND expires_at <= ?
+                ORDER BY expires_at, id
+                FOR UPDATE SKIP LOCKED
+                LIMIT ?
+                """, (resultSet, rowNumber) -> new ExpiryCandidate(
+                        resultSet.getObject("tenant_id", UUID.class),
+                        resultSet.getObject("id", UUID.class),
+                        BookingStatus.valueOf(resultSet.getString("status"))
+                ), Timestamp.from(now), limit);
     }
 
     @Override
@@ -104,6 +148,70 @@ public class JdbcBookingRepository implements BookingRepository {
                 SET status = ?, updated_at = ?
                 WHERE tenant_id = ? AND id = ? AND status = ?
                 """, newStatus.name(), Timestamp.from(updatedAt), tenantId, bookingId, expectedStatus.name()) == 1;
+    }
+
+    @Override
+    public boolean updateSchedule(
+            UUID tenantId,
+            UUID bookingId,
+            BookingStatus expectedStatus,
+            Instant expectedUpdatedAt,
+            UUID employeeId,
+            Instant startAt,
+            Instant endAt,
+            Instant updatedAt
+    ) {
+        return jdbc.update("""
+                UPDATE bookings
+                SET employee_id = ?, start_at = ?, end_at = ?, updated_at = ?
+                WHERE tenant_id = ? AND id = ? AND status = ? AND updated_at = ?
+                """, employeeId, Timestamp.from(startAt), Timestamp.from(endAt), Timestamp.from(updatedAt),
+                tenantId, bookingId, expectedStatus.name(), Timestamp.from(expectedUpdatedAt)) == 1;
+    }
+
+    @Override
+    public void insertRescheduleHistory(BookingRescheduleHistory history) {
+        jdbc.update("""
+                INSERT INTO booking_reschedule_history (
+                    id, tenant_id, booking_id, old_employee_id, new_employee_id,
+                    old_start_at, old_end_at, new_start_at, new_end_at,
+                    actor_user_id, reason, changed_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, history.id(), history.tenantId(), history.bookingId(),
+                history.oldEmployeeId(), history.newEmployeeId(),
+                Timestamp.from(history.oldStartAt()), Timestamp.from(history.oldEndAt()),
+                Timestamp.from(history.newStartAt()), Timestamp.from(history.newEndAt()),
+                history.actorUserId(), history.reason(), Timestamp.from(history.changedAt()));
+    }
+
+    @Override
+    public Optional<RescheduleContext> findRescheduleContext(
+            UUID tenantId, UUID branchId, UUID serviceId, UUID employeeId
+    ) {
+        return jdbc.query("""
+                SELECT business.slug, business.time_zone
+                FROM businesses business
+                JOIN branches branch
+                  ON branch.tenant_id = business.id AND branch.id = ? AND branch.status = 'ACTIVE'
+                JOIN services service
+                  ON service.tenant_id = business.id AND service.id = ? AND service.status = 'ACTIVE'
+                JOIN branch_services bs
+                  ON bs.tenant_id = business.id AND bs.branch_id = branch.id AND bs.service_id = service.id
+                JOIN employees employee
+                  ON employee.tenant_id = business.id AND employee.id = ? AND employee.status = 'ACTIVE'
+                JOIN employee_branch_assignments eba
+                  ON eba.tenant_id = business.id AND eba.employee_id = employee.id AND eba.branch_id = branch.id
+                JOIN employee_services es
+                  ON es.tenant_id = business.id AND es.employee_id = employee.id AND es.service_id = service.id
+                WHERE business.id = ? AND business.status = 'ACTIVE'
+                """, (resultSet, rowNumber) -> new RescheduleContext(
+                        resultSet.getString("slug"), resultSet.getString("time_zone")
+                ), branchId, serviceId, employeeId, tenantId).stream().findFirst();
+    }
+
+    private Optional<Booking> findBooking(String sql, UUID first, UUID second) {
+        return jdbc.query(sql, (resultSet, rowNumber) -> mapBooking(resultSet), first, second)
+                .stream().findFirst();
     }
 
     private Booking mapBooking(ResultSet resultSet) throws SQLException {

@@ -27,6 +27,9 @@ Mỗi phần tử `violations` có `field`, `code` constraint và `message` côn
 | Bean hoặc method parameter validation thất bại | 400 | `VALIDATION_ERROR` |
 | JSON không đọc được | 400 | `MALFORMED_REQUEST` |
 | Thiếu hoặc sai request parameter | 400 | `INVALID_REQUEST` |
+| Slot booking không còn khả dụng | 409 | `SLOT_UNAVAILABLE` |
+| Idempotency key được dùng với payload khác | 409 | `IDEMPOTENCY_KEY_REUSED` |
+| Booking đã đổi trạng thái hoặc mutation cạnh tranh | 409 | `BOOKING_STATE_CONFLICT` |
 | Resource nghiệp vụ không tồn tại | 404 | `RESOURCE_NOT_FOUND` |
 | Endpoint không tồn tại | 404 | `ENDPOINT_NOT_FOUND` |
 | HTTP method không hỗ trợ | 405 | `METHOD_NOT_ALLOWED` |

@@ -17,4 +17,6 @@ export type ScheduleBreakInput = { startLocalTime: string; endLocalTime: string 
 export type ScheduleExceptionInput = { branchId: string; date: string; type: ScheduleExceptionType; startLocalTime?: string | null; endLocalTime?: string | null; note?: string | null }
 export type AvailabilitySlot = { start: string; end: string; employeeIds: string[] }
 export type PublicAvailabilityResponse = { date: string; timeZone: string; branchId: string; serviceId: string; slots: AvailabilitySlot[] }
+export type CreateBookingInput = { branchId: string; serviceId: string; employeeId?: string; start: string; customer: { name: string; email?: string; phone?: string } }
+export type CreatedBooking = { bookingId: string; status: string; branchId: string; employeeId: string; start: string; end: string; expiresAt: string; totalAmount: number; currency: string; items: { serviceId: string; name: string; price: number; currency: string; durationMinutes: number; bufferBeforeMinutes: number; bufferAfterMinutes: number }[] }
 export type ProtectedRequest = <T>(path: string, init?: RequestInit) => Promise<T>

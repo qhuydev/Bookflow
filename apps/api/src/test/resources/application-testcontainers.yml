@@ -8,6 +8,8 @@ spring:
     clean-disabled: true
 
 bookflow:
+  booking:
+    expiry-enabled: false
   authentication:
     rate-limit:
       enabled: false

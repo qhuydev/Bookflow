@@ -41,6 +41,7 @@ class AuthenticationSecurityConfiguration {
                         }))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/businesses/**").authenticated()
+                        .requestMatchers("/api/v1/customer/**").authenticated()
                         .requestMatchers("/api/v1/auth/logout-all").authenticated()
                         .anyRequest().permitAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -60,7 +61,9 @@ class AuthenticationSecurityConfiguration {
         configuration.setAllowedOrigins(origins);
         configuration.setAllowCredentials(true);
         configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "X-XSRF-TOKEN"));
+        configuration.setAllowedHeaders(java.util.List.of(
+                "Authorization", "Content-Type", "X-XSRF-TOKEN", "Idempotency-Key"
+        ));
         configuration.setExposedHeaders(java.util.List.of("Location"));
         configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -43,9 +43,12 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -55,7 +58,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         properties = {
                 "bookflow.availability.slot-step-minutes=15",
                 "bookflow.availability.default-lead-time-minutes=60",
-                "bookflow.booking.hold-minutes=10"
+                "bookflow.booking.hold-minutes=10",
+                "bookflow.authentication.cors.allowed-origins[0]=http://127.0.0.1:3001"
         }
 )
 @ActiveProfiles("testcontainers")
@@ -214,6 +218,20 @@ class CreateBookingIT {
     }
 
     @Test
+    void publicCreateMayOmitEmployeeAndReturnsTheActualAssignment() throws Exception {
+        Fixture fixture = fixture("public-auto", 60, 0, 0, 90);
+        UUID secondEmployee = addEmployee(fixture, "EMP-B", BOOKING_DATE, "09:00", "12:00");
+        UUID expected = firstEmployeeByDatabaseOrder(fixture);
+        String body = body(fixture, null, NINE, "Auto Guest", "auto@example.test");
+
+        performCreate(path(fixture), "booking-public-auto-0001", body)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.employeeId").value(expected.toString()));
+        assertThat(jdbc.queryForObject(
+                "SELECT employee_id FROM bookings", UUID.class)).isEqualTo(expected);
+    }
+
+    @Test
     void twentyConcurrentRequestsForOneSlotProduceOneBookingAndNineteenConflicts() throws Exception {
         Fixture fixture = fixture("concurrent-slot", 60, 0, 0, 90);
         List<Callable<Outcome>> tasks = new ArrayList<>();
@@ -255,6 +273,82 @@ class CreateBookingIT {
     }
 
     @Test
+    void omittedEmployeeUsesDeterministicLoadOrderAndReplaysTheAssignedEmployee() {
+        Fixture fixture = fixture("auto-order", 60, 0, 0, 90);
+        UUID secondEmployee = addEmployee(fixture, "EMP-B", BOOKING_DATE, "09:00", "12:00");
+        UUID expectedFirst = firstEmployeeByDatabaseOrder(fixture);
+
+        var first = bookingService.create(fixture.slug(), "booking-auto-order-0001",
+                request(fixture, null, NINE, "Auto Guest"));
+        assertThat(first.response().employeeId()).isEqualTo(expectedFirst);
+
+        var replay = bookingService.create(fixture.slug(), "booking-auto-order-0001",
+                request(fixture, null, NINE, "Auto Guest"));
+        assertThat(replay.replayed()).isTrue();
+        assertThat(replay.response().bookingId()).isEqualTo(first.response().bookingId());
+        assertThat(replay.response().employeeId()).isEqualTo(expectedFirst);
+
+        assertThatThrownBy(() -> bookingService.create(fixture.slug(), "booking-auto-order-0001",
+                request(fixture, null, NINE.plusHours(1), "Auto Guest")))
+                .isInstanceOf(IdempotencyKeyReusedException.class);
+        assertThat(count("bookings")).isEqualTo(1);
+        assertThat(count("booking_idempotency_keys")).isEqualTo(1);
+    }
+
+    @Test
+    void autoAssignmentSkipsUnavailableAndInactiveCandidatesThenFailsWhenAllAreBusy() {
+        Fixture fixture = fixture("auto-skip", 60, 0, 0, 90);
+        UUID secondEmployee = addEmployee(fixture, "EMP-B", BOOKING_DATE, "09:00", "12:00");
+        UUID preferred = firstEmployeeByDatabaseOrder(fixture);
+        UUID fallback = preferred.equals(fixture.firstEmployee()) ? secondEmployee : fixture.firstEmployee();
+
+        bookingService.create(fixture.slug(), "booking-auto-skip-0001",
+                request(fixture, preferred, NINE, "Occupy Preferred"));
+        var fallbackResult = bookingService.create(fixture.slug(), "booking-auto-skip-0002",
+                request(fixture, null, NINE, "Fallback Guest"));
+        assertThat(fallbackResult.response().employeeId()).isEqualTo(fallback);
+
+        assertThatThrownBy(() -> bookingService.create(fixture.slug(), "booking-auto-skip-0003",
+                request(fixture, null, NINE, "No Candidate")))
+                .isInstanceOf(SlotUnavailableException.class);
+        assertThat(count("bookings")).isEqualTo(2);
+        assertThat(count("booking_idempotency_keys")).isEqualTo(2);
+
+        Fixture inactive = fixture("auto-inactive", 60, 0, 0, 90);
+        UUID active = addEmployee(inactive, "EMP-B", BOOKING_DATE, "09:00", "12:00");
+        jdbc.update("UPDATE employees SET status = 'ARCHIVED' WHERE id = ?", inactive.firstEmployee());
+        var activeResult = bookingService.create(inactive.slug(), "booking-auto-inactive-0001",
+                request(inactive, null, NINE, "Active Only"));
+        assertThat(activeResult.response().employeeId()).isEqualTo(active);
+    }
+
+    @Test
+    void concurrentAutoAssignmentFallsBackAcrossCandidatesWithoutOrphans() throws Exception {
+        Fixture fixture = fixture("auto-race", 60, 0, 0, 90);
+        addEmployee(fixture, "EMP-B", BOOKING_DATE, "09:00", "12:00");
+        CountDownLatch start = new CountDownLatch(1);
+        List<Callable<Outcome>> tasks = List.of(
+                () -> outcome(start, () -> bookingService.create(
+                        fixture.slug(), "booking-auto-race-0001",
+                        request(fixture, null, NINE, "Race A"))),
+                () -> outcome(start, () -> bookingService.create(
+                        fixture.slug(), "booking-auto-race-0002",
+                        request(fixture, null, NINE, "Race B")))
+        );
+
+        List<Outcome> outcomes = runConcurrently(tasks, start);
+        assertThat(outcomes).allMatch(Outcome::success);
+        List<UUID> assigned = outcomes.stream().map(Outcome::bookingId)
+                .map(id -> jdbc.queryForObject("SELECT employee_id FROM bookings WHERE id = ?", UUID.class, id))
+                .toList();
+        assertThat(assigned).doesNotHaveDuplicates().hasSize(2);
+        assertThat(count("bookings")).isEqualTo(2);
+        assertThat(count("booking_items")).isEqualTo(2);
+        assertThat(count("booking_status_history")).isEqualTo(2);
+        assertThat(count("booking_idempotency_keys")).isEqualTo(2);
+    }
+
+    @Test
     void halfOpenBoundariesDifferentEmployeesAndBuffersUseOccupiedRangeSemantics() {
         Fixture boundary = fixture("boundary", 60, 0, 0, 90);
         UUID secondEmployee = addEmployee(boundary, "EMP-B", BOOKING_DATE, "09:00", "12:00");
@@ -288,6 +382,19 @@ class CreateBookingIT {
         assertThat(operation)
                 .contains("Idempotency-Key", "X-XSRF-TOKEN", "201", "200", "400", "403", "404", "409")
                 .doesNotContain("tenantId", "requestFingerprint", "statusHistory");
+    }
+
+    @Test
+    void corsPreflightAllowsTheBookingIdempotencyHeader() throws Exception {
+        mvc.perform(options("/api/v1/public/businesses/demo/bookings")
+                        .header("Origin", "http://127.0.0.1:3001")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers",
+                                "content-type,x-xsrf-token,idempotency-key"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://127.0.0.1:3001"))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"))
+                .andExpect(header().string("Access-Control-Allow-Headers", containsString("Idempotency-Key")));
     }
 
     private org.springframework.test.web.servlet.ResultActions performCreate(
@@ -429,6 +536,15 @@ class CreateBookingIT {
                 """, UUID.class, fixture.business(), fixture.branch(), employee);
     }
 
+    private UUID firstEmployeeByDatabaseOrder(Fixture fixture) {
+        return jdbc.queryForObject("""
+                SELECT id FROM employees
+                WHERE tenant_id = ? AND status = 'ACTIVE'
+                ORDER BY id
+                LIMIT 1
+                """, UUID.class, fixture.business());
+    }
+
     private CreateBookingRequest request(
             Fixture fixture,
             UUID employee,
@@ -454,9 +570,10 @@ class CreateBookingIT {
             String customerName,
             String customerEmail
     ) {
+        String employeeField = employee == null ? "" : "\"employeeId\":\"%s\",".formatted(employee);
         return """
-                {"branchId":"%s","serviceId":"%s","employeeId":"%s","start":"%s","customer":{"name":"%s","email":"%s"}}
-                """.formatted(fixture.branch(), fixture.service(), employee, start, customerName, customerEmail);
+                {"branchId":"%s","serviceId":"%s",%s"start":"%s","customer":{"name":"%s","email":"%s"}}
+                """.formatted(fixture.branch(), fixture.service(), employeeField, start, customerName, customerEmail);
     }
 
     private String path(Fixture fixture) {

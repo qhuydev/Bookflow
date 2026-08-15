@@ -6,5 +6,8 @@ import org.springframework.validation.annotation.Validated;
 
 @Validated
 @ConfigurationProperties("bookflow.booking")
-public record BookingProperties(@Min(1) int holdMinutes) {
+public record BookingProperties(
+        @Min(1) int holdMinutes,
+        @Min(1) int expiryBatchSize
+) {
 }
